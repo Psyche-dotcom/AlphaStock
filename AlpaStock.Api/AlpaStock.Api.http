@@ -1,0 +1,6 @@
+@AlpaStock.Api_HostAddress = http://localhost:5012
+
+GET {{AlpaStock.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
