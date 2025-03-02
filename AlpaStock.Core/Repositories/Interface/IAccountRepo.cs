@@ -1,17 +1,19 @@
 ﻿
 
 using AlpaStock.Core.DTOs.Request.Auth;
+using AlpaStock.Core.DTOs.Response.Auth;
 using AlpaStock.Core.Entities;
 
 namespace AlpaStock.Core.Repositories.Interface
 {
     public interface IAccountRepo
     {
-
+        Task<ApplicationUser> FindUserByIdFullinfoAsync(string id);
         Task<ApplicationUser> SignUpAsync(ApplicationUser user, string Password);
-
+        Task<PaginatedUser> GetAllRegisteredUserAsync(int pageNumber, int perPageSize, string? sinceDate, string? name, UserFilter filter);
         Task<bool> CheckAccountPassword(ApplicationUser user, string password);
         int GenerateToken();
+        Task<UserStatisticsResponse> GetUserStatisticsAsync();
         int GenerateConfirmEmailToken();
         Task<bool> DeleteUserToken(ConfirmEmailToken token);
         Task<ConfirmEmailToken> retrieveUserToken(string userid);

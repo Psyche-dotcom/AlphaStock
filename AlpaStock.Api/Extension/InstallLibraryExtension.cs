@@ -15,7 +15,6 @@ namespace AlpaStock.Api.Extension
                 option.ReturnHttpNotAcceptable = true;
             }).AddXmlDataContractSerializerFormatters().AddJsonOptions(x => x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
 
-
             services.AddCors(options =>
             {
                 options.AddDefaultPolicy(builder =>
@@ -24,7 +23,6 @@ namespace AlpaStock.Api.Extension
                     builder.AllowAnyOrigin();
                     builder.AllowAnyHeader();
                 });
-
             });
 
             services.AddSwaggerGen(option =>
@@ -39,37 +37,42 @@ namespace AlpaStock.Api.Extension
                     Scheme = "Bearer"
                 });
                 option.AddSecurityRequirement(new OpenApiSecurityRequirement
-     {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
                 {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },new string[]{ }
-        }
-     });
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        }, new string[] { }
+                    }
+                });
             });
+
             services.AddAuthentication(option =>
             {
                 option.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 option.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
                 option.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
             })
-                .AddJwtBearer(option =>
-                {
-                    option.SaveToken = true;
-                    option.RequireHttpsMetadata = false;
-                    option.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters()
-                    {
-                        ValidateIssuer = false,
-                        ValidateAudience = false,
-                        ValidateIssuerSigningKey = false,
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:Secret"]))
-                    };
-                });
+   .AddJwtBearer(option =>
+   {
+       option.SaveToken = true;
+       option.RequireHttpsMetadata = false;
+       option.TokenValidationParameters = new TokenValidationParameters
+       {
+           ValidateIssuer = true,
+           ValidateAudience = true,
+           ValidateIssuerSigningKey = true,
+           ValidIssuer = configuration["JWT:ValidIssuer"],
+           ValidAudience = configuration["JWT:ValidAudience"],
+           IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:Secret"]))
+       };
+   });
+
+
         }
     }
 }

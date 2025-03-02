@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AlpaStock.Core.Migrations
 {
     /// <inheritdoc />
-    public partial class initialmigration : Migration
+    public partial class initialMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -60,9 +60,11 @@ namespace AlpaStock.Core.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "text", nullable: false),
-                    SubType = table.Column<string>(type: "text", nullable: false),
-                    Module = table.Column<string>(type: "text", nullable: false),
-                    Amount = table.Column<double>(type: "double precision", nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    Amount = table.Column<decimal>(type: "numeric", nullable: false),
+                    IsDIscounted = table.Column<bool>(type: "boolean", nullable: false),
+                    DiscountRate = table.Column<int>(type: "integer", nullable: false),
+                    BillingInterval = table.Column<string>(type: "text", nullable: false),
                     Created = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     DateUpdated = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     IsDeleted = table.Column<bool>(type: "boolean", nullable: false)
@@ -224,12 +226,74 @@ namespace AlpaStock.Core.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Payments",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "text", nullable: false),
+                    Amount = table.Column<string>(type: "text", nullable: false),
+                    OrderReferenceId = table.Column<string>(type: "text", nullable: false),
+                    Description = table.Column<string>(type: "text", nullable: false),
+                    PaymentType = table.Column<string>(type: "text", nullable: false),
+                    CreatedPaymentTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    CompletePaymentTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false),
+                    PaymentStatus = table.Column<string>(type: "text", nullable: false),
+                    UserId = table.Column<string>(type: "text", nullable: false),
+                    SubscriptionId = table.Column<string>(type: "text", nullable: false),
+                    Created = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    DateUpdated = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Payments", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Payments_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Payments_Subscriptions_SubscriptionId",
+                        column: x => x.SubscriptionId,
+                        principalTable: "Subscriptions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SubscriptionFeatures",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "text", nullable: false),
+                    Category = table.Column<string>(type: "text", nullable: false),
+                    FeatureName = table.Column<string>(type: "text", nullable: false),
+                    ShortName = table.Column<string>(type: "text", nullable: false),
+                    SubcriptionId = table.Column<string>(type: "text", nullable: false),
+                    SubscriptionId = table.Column<string>(type: "text", nullable: true),
+                    CurrentState = table.Column<string>(type: "text", nullable: false),
+                    Created = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    DateUpdated = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "boolean", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SubscriptionFeatures", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_SubscriptionFeatures_Subscriptions_SubscriptionId",
+                        column: x => x.SubscriptionId,
+                        principalTable: "Subscriptions",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "UserSubscriptions",
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "text", nullable: false),
                     SubscriptionId = table.Column<string>(type: "text", nullable: false),
                     UserId = table.Column<string>(type: "text", nullable: false),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false),
                     SubscrptionStart = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     SubscrptionEnd = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     Created = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
@@ -303,6 +367,21 @@ namespace AlpaStock.Core.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_Payments_SubscriptionId",
+                table: "Payments",
+                column: "SubscriptionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Payments_UserId",
+                table: "Payments",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SubscriptionFeatures_SubscriptionId",
+                table: "SubscriptionFeatures",
+                column: "SubscriptionId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_UserSubscriptions_SubscriptionId",
                 table: "UserSubscriptions",
                 column: "SubscriptionId");
@@ -336,6 +415,12 @@ namespace AlpaStock.Core.Migrations
 
             migrationBuilder.DropTable(
                 name: "ForgetPasswordTokens");
+
+            migrationBuilder.DropTable(
+                name: "Payments");
+
+            migrationBuilder.DropTable(
+                name: "SubscriptionFeatures");
 
             migrationBuilder.DropTable(
                 name: "UserSubscriptions");

@@ -25,23 +25,13 @@ namespace AlpaStock.Core.Seeder
             if (!dbContext.Roles.Any())
             {
                 await dbContext.Database.EnsureCreatedAsync();
-                var userManager = app.ApplicationServices.CreateScope().ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
                 var roleManager = app.ApplicationServices.CreateScope().ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-
-                // Creating list of roles
                 List<string> roles = new() { "Admin", "User" };
-
-                // Creating roles
                 foreach (var role in roles)
                 {
                     await roleManager.CreateAsync(new IdentityRole { Name = role });
                 }
-
-
             }
-
-
-            // Saving everything into the database
             await dbContext.SaveChangesAsync();
         }
 

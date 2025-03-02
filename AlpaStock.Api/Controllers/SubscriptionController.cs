@@ -1,40 +1,118 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using AlpaStock.Core.DTOs.Request.Subscription;
+using AlpaStock.Infrastructure.Service.Interface;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AlpaStock.Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/subscription")]
     [ApiController]
     public class SubscriptionController : ControllerBase
     {
-        [HttpPost("paypal/subscribe")]
-        public IActionResult SubscribeToPayPal()
+        private readonly ISubscriptionService _subscriptionService;
+
+        public SubscriptionController(ISubscriptionService subscriptionService)
         {
-            return Ok(new { message = "PayPal subscription successful", subscriptionId = "dummy-subscription-id" });
+            _subscriptionService = subscriptionService;
+        }
+       
+
+        [HttpPost("create")]
+        public async Task<IActionResult> CreateSubscriptions(AddSubPlanReq req)
+        {
+           
+            var result = await _subscriptionService.CreateSubscriptionPlan(req);
+
+            if (result.StatusCode == 200 || result.StatusCode == 201)
+            {
+                return Ok(result);
+            }
+            else if (result.StatusCode == 404)
+            {
+                return NotFound(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+        } 
+        [HttpGet("retrieve/all")]
+        public async Task<IActionResult> GetAllSubscriptions()
+        {
+           
+            var result = await _subscriptionService.RetrieveAllPlan();
+
+            if (result.StatusCode == 200 || result.StatusCode == 201)
+            {
+                return Ok(result);
+            }
+            else if (result.StatusCode == 404)
+            {
+                return NotFound(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
         }
 
-        [HttpGet("subscriptions")]
-        public IActionResult GetAllSubscriptions()
+        [HttpGet("info/{id}")]
+        public async Task<IActionResult> GetSubscriptionAsync(string id)
         {
-            return Ok(new { message = "List of subscriptions", subscriptions = new string[] { "sub1", "sub2" } });
+            var result = await _subscriptionService.RetrievePlanFeature(id);
+
+            if (result.StatusCode == 200 || result.StatusCode == 201)
+            {
+                return Ok(result);
+            }
+            else if (result.StatusCode == 404)
+            {
+                return NotFound(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+        }
+        [HttpPut("update")]
+        public async Task<IActionResult> UpdateSubscriptionAsync(UpdateSubDetails req)
+        {
+          
+            var result = await _subscriptionService.updateSubscriptionPlanDetails(req);
+
+            if (result.StatusCode == 200 || result.StatusCode == 201)
+            {
+                return Ok(result);
+            }
+            else if (result.StatusCode == 404)
+            {
+                return NotFound(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+        }
+        [HttpPut("feature/update")]
+        public async Task<IActionResult> UpdateSubscriptionFeatureAsync(UpdateSubScriptionFeature req)
+        {
+          
+            var result = await _subscriptionService.updateSubscriptionFeature(req);
+
+            if (result.StatusCode == 200 || result.StatusCode == 201)
+            {
+                return Ok(result);
+            }
+            else if (result.StatusCode == 404)
+            {
+                return NotFound(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
         }
 
-        [HttpGet("subscription/{id}")]
-        public IActionResult GetSubscription(string id)
-        {
-            return Ok(new { message = "Subscription details", subscriptionId = id, status = "active" });
-        }
-
-        [HttpPut("subscription/{id}")]
-        public IActionResult UpdateSubscription(string id)
-        {
-            return Ok(new { message = "Subscription updated", subscriptionId = id });
-        }
-
-        [HttpDelete("subscription/{id}")]
-        public IActionResult CancelSubscription(string id)
-        {
-            return Ok(new { message = "Subscription cancelled", subscriptionId = id });
-        }
+      
     }
 }

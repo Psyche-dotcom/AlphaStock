@@ -5,6 +5,7 @@ using AlpaStock.Core.DTOs.Response.Auth;
 using AlpaStock.Core.Entities;
 using AlpaStock.Core.Repositories.Interface;
 using AlpaStock.Infrastructure.Service.Interface;
+using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -17,6 +18,8 @@ namespace AlpaStock.Infrastructure.Service.Implementation
         private readonly IAccountRepo _accountRepo;
         private readonly IEmailServices _emailServices;
         private readonly IAlphaRepository<ForgetPasswordToken> _forgetPasswordTokenRepo;
+        private readonly ICloudinaryService _cloudinaryService;
+        private readonly IMapper _mapper;
         private readonly ILogger<AccountService> _logger;
         private readonly IGenerateJwt _generateJwt;
 
@@ -24,13 +27,16 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             ILogger<AccountService> logger,
             IGenerateJwt generateJwt,
             IEmailServices emailServices,
-            IAlphaRepository<ForgetPasswordToken> forgetPasswordTokenRepo)
+            IAlphaRepository<ForgetPasswordToken> forgetPasswordTokenRepo,
+            ICloudinaryService cloudinaryService, IMapper mapper)
         {
             _accountRepo = accountRepo;
             _logger = logger;
             _generateJwt = generateJwt;
             _emailServices = emailServices;
             _forgetPasswordTokenRepo = forgetPasswordTokenRepo;
+            _cloudinaryService = cloudinaryService;
+            _mapper = mapper;
         }
         public async Task<ResponseDto<string>> RegisterUser(SignUp signUp, string Role)
         {
@@ -117,7 +123,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 var checkUserExist = await _accountRepo.FindUserByEmailAsync(signIn.Email);
                 if (checkUserExist == null)
                 {
-                    response.ErrorMessages = new List<string>() { "There is no company with the email provided" };
+                    response.ErrorMessages = new List<string>() { "There is no user with the email provided" };
                     response.StatusCode = 404;
                     response.DisplayMessage = "Error";
                     return response;
@@ -136,6 +142,14 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     response.StatusCode = 400;
                     response.DisplayMessage = "Error";
                     return response;
+                }
+                if (!checkUserExist.EmailConfirmed)
+                {
+                    response.ErrorMessages = new List<string>() { "Please confirm your email address" };
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    return response;
+
                 }
                 var generateToken = await _generateJwt.GenerateToken(checkUserExist);
                 if (generateToken == null)
@@ -167,25 +181,46 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             var response = new ResponseDto<UserInfo>();
             try
             {
-                var fetchCompany = await _accountRepo.FindUserByIdAsync(userId);
-                if (fetchCompany == null)
+                var fetchUser = await _accountRepo.FindUserByIdFullinfoAsync(userId);
+                if (fetchUser == null)
                 {
                     response.ErrorMessages = new List<string>() { "Invalid user" };
                     response.DisplayMessage = "Error";
                     response.StatusCode = 400;
                     return response;
                 }
+                var subActive = fetchUser.Subscriptions.Any(s => s.IsActive);
+                var accessModule = new List<string>();
+                if (subActive)
+                {
+                    var current = fetchUser.Subscriptions
+                    .FirstOrDefault(s => s.IsActive).Subscription.SubscriptionFeatures;
+                    foreach (var subscriptionFetures in current)
+                    {
+                        if (subscriptionFetures.CurrentState != "False")
+                        {
+                            accessModule.Add(subscriptionFetures.ShortName);
+                        }
+                    }
+                }
                 var result = new UserInfo()
                 {
-                    Id = fetchCompany.Id,
-                    Email = fetchCompany.Email,
-                    UserName = fetchCompany.UserName,
-                    FirstName = fetchCompany.FirstName,
-                    LastName = fetchCompany.LastName,
-                    Country = fetchCompany.Country,
-                    PhoneNumber =fetchCompany.PhoneNumber,
-                    isSuspended = fetchCompany.isSuspended,
-
+                    Id = fetchUser.Id,
+                    Email = fetchUser.Email,
+                    UserName = fetchUser.UserName,
+                    FirstName = fetchUser.FirstName,
+                    LastName = fetchUser.LastName,
+                    Country = fetchUser.Country,
+                    PhoneNumber = fetchUser.PhoneNumber,
+                    isSuspended = fetchUser.isSuspended,
+                    IsEmailConfirmed = fetchUser.EmailConfirmed,
+                    ActiveSubcriptionName = fetchUser.Subscriptions
+                    .FirstOrDefault(s => s.IsActive) != null ? fetchUser.Subscriptions
+                    .FirstOrDefault(s => s.IsActive).Subscription.Name : null,
+                    isSubActive = subActive,
+                    ProfilePicture = fetchUser.ProfilePicture,
+                    Created = fetchUser.Created,
+                    AccessibleModule = accessModule
 
                 };
 
@@ -206,20 +241,22 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             }
         }
 
+
+
         public async Task<ResponseDto<string>> ResetPassword(ResetPassword resetPassword)
         {
             var response = new ResponseDto<string>();
             try
             {
-                var findCompany = await _accountRepo.FindUserByEmailAsync(resetPassword.Email);
-                if (findCompany == null)
+                var findUser = await _accountRepo.FindUserByEmailAsync(resetPassword.Email);
+                if (findUser == null)
                 {
                     response.ErrorMessages = new List<string>() { "There is no user with the email provided" };
                     response.StatusCode = 404;
                     response.DisplayMessage = "Error";
                     return response;
                 }
-                var retrieveToken = await _forgetPasswordTokenRepo.GetQueryable().FirstOrDefaultAsync(u => u.Id == findCompany.Id);
+                var retrieveToken = await _forgetPasswordTokenRepo.GetQueryable().FirstOrDefaultAsync(u => u.userid == findUser.Id);
                 if (retrieveToken == null)
                 {
                     response.ErrorMessages = new List<string>() { "invalid user token" };
@@ -228,7 +265,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     return response;
                 }
                 resetPassword.Token = retrieveToken.gentoken;
-                var resetPasswordAsync = await _accountRepo.ResetPasswordAsync(findCompany, resetPassword);
+                var resetPasswordAsync = await _accountRepo.ResetPasswordAsync(findUser, resetPassword);
                 if (resetPasswordAsync == null)
                 {
                     response.ErrorMessages = new List<string>() { "Invalid token" };
@@ -252,6 +289,47 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 return response;
             }
         }
+        public async Task<ResponseDto<PaginatedUser>> GetAllUsersAsync(int pageNumber, int perPageSize, string? sinceDate, string? name, UserFilter filter)
+        {
+            var response = new ResponseDto<PaginatedUser>();
+            try
+            {
+                var getUser = await _accountRepo.GetAllRegisteredUserAsync(pageNumber, perPageSize, sinceDate, name, filter);
+                response.StatusCode = StatusCodes.Status200OK;
+                response.DisplayMessage = "Success";
+                response.Result = getUser;
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+                response.ErrorMessages = new List<string>() { "Error in retrieving all camgirl" };
+                response.StatusCode = 500;
+                response.DisplayMessage = "Error";
+                return response;
+            }
+        }
+        public async Task<ResponseDto<UserStatisticsResponse>> GetUserStatisticsChartAsync()
+        {
+            var response = new ResponseDto<UserStatisticsResponse>();
+            try
+            {
+                var getUserStats = await _accountRepo.GetUserStatisticsAsync();
+                response.StatusCode = StatusCodes.Status200OK;
+                response.DisplayMessage = "Success";
+                response.Result = getUserStats;
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+                response.ErrorMessages = new List<string>() { "Error in retrieving all camgirl" };
+                response.StatusCode = 500;
+                response.DisplayMessage = "Error";
+                return response;
+            }
+        }
+
         public async Task<ResponseDto<string>> ConfirmEmailAsync(int token, string email)
         {
             var response = new ResponseDto<string>();
@@ -332,7 +410,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     response.DisplayMessage = "Error";
                     return response;
                 }
-                var retrieveToken = await _forgetPasswordTokenRepo.GetQueryable().FirstOrDefaultAsync(u => u.Id == checkUser.Id);
+                var retrieveToken = await _forgetPasswordTokenRepo.GetQueryable().FirstOrDefaultAsync(u => u.userid == checkUser.Id);
                 if (retrieveToken != null)
                 {
                     _forgetPasswordTokenRepo.Delete(retrieveToken);
@@ -348,8 +426,8 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 await _forgetPasswordTokenRepo.SaveChanges();
                 var message = new Message(new string[] { checkUser.Email }, "Reset Password Code", $"<p>Your reset password code is below<p><br/><h6>{generateToken}</h6><br/> <p>Please use it in your reset password page</p>");
                 _emailServices.SendEmail(message);
-                response.DisplayMessage = "Token generated Successfully";
-                response.Result = generateToken.ToString();
+                response.DisplayMessage = "Success";
+                response.Result = "Reset password token sent to registered email";
                 response.StatusCode = 200;
                 return response;
             }
@@ -362,7 +440,199 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 return response;
             }
         }
+        public async Task<ResponseDto<string>> SuspendUserAsync(string useremail)
+        {
+            var response = new ResponseDto<string>();
+            try
+            {
+                var findUser = await _accountRepo.FindUserByEmailAsync(useremail);
+                if (findUser == null)
+                {
+                    response.ErrorMessages = new List<string>() { "There is no user with the email provided" };
+                    response.StatusCode = 404;
+                    response.DisplayMessage = "Error";
+                    return response;
+                }
+                findUser.isSuspended = true;
+                var updateUser = await _accountRepo.UpdateUserInfo(findUser);
+                if (updateUser == false)
+                {
+                    response.ErrorMessages = new List<string>() { "Error in suspending user" };
+                    response.StatusCode = StatusCodes.Status400BadRequest;
+                    response.DisplayMessage = "Error";
+                    return response;
+                }
 
+                response.StatusCode = StatusCodes.Status200OK;
+                response.DisplayMessage = "Success";
+                response.Result = "Successfully suspend user";
+                return response;
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+                response.ErrorMessages = new List<string>() { "Error in suspending user" };
+                response.StatusCode = 500;
+                response.DisplayMessage = "Error";
+                return response;
+            }
+        }
+        public async Task<ResponseDto<string>> UnSuspendUserAsync(string useremail)
+        {
+            var response = new ResponseDto<string>();
+            try
+            {
+                var findUser = await _accountRepo.FindUserByEmailAsync(useremail);
+                if (findUser == null)
+                {
+                    response.ErrorMessages = new List<string>() { "There is no user with the email provided" };
+                    response.StatusCode = 404;
+                    response.DisplayMessage = "Error";
+                    return response;
+                }
+                findUser.isSuspended = false;
+                var updateUser = await _accountRepo.UpdateUserInfo(findUser);
+                if (updateUser == false)
+                {
+                    response.ErrorMessages = new List<string>() { "Error in unsuspending user" };
+                    response.StatusCode = StatusCodes.Status400BadRequest;
+                    response.DisplayMessage = "Error";
+                    return response;
+                }
+                response.StatusCode = StatusCodes.Status200OK;
+                response.DisplayMessage = "Success";
+                response.Result = "Successfully unsuspend user";
+                return response;
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+                response.ErrorMessages = new List<string>() { "Error in unsuspending user" };
+                response.StatusCode = 500;
+                response.DisplayMessage = "Error";
+                return response;
+            }
+        }
+
+        public async Task<ResponseDto<string>> DeleteUser(string email)
+        {
+            var response = new ResponseDto<string>();
+            try
+            {
+                var findUser = await _accountRepo.FindUserByEmailAsync(email);
+                if (findUser == null)
+                {
+                    response.ErrorMessages = new List<string>() { "There is no user with the email provided" };
+                    response.StatusCode = 404;
+                    response.DisplayMessage = "Error";
+                    return response;
+                }
+                var deleteUser = await _accountRepo.DeleteUserByEmail(findUser);
+                if (deleteUser == false)
+                {
+                    response.ErrorMessages = new List<string>() { "Error in deleting user" };
+                    response.StatusCode = 501;
+                    response.DisplayMessage = "Error";
+                    return response;
+                }
+                response.StatusCode = StatusCodes.Status200OK;
+                response.DisplayMessage = "Success";
+                response.Result = "Successfully delete user";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+                response.ErrorMessages = new List<string>() { "Error in deleting user" };
+                response.StatusCode = 500;
+                response.DisplayMessage = "Error";
+                return response;
+            }
+        }
+
+        public async Task<ResponseDto<string>> UpdateUser(string email, UpdateUserDto updateUser)
+        {
+            var response = new ResponseDto<string>();
+            try
+            {
+                var findUser = await _accountRepo.FindUserByEmailAsync(email);
+                if (findUser == null)
+                {
+                    response.ErrorMessages = new List<string>() { "There is no user with the email provided" };
+                    response.StatusCode = 404;
+                    response.DisplayMessage = "Error";
+                    return response;
+                }
+                var mapUpdateDetails = _mapper.Map(updateUser, findUser);
+                var updateUserDetails = await _accountRepo.UpdateUserInfo(mapUpdateDetails);
+                if (updateUserDetails == false)
+                {
+                    response.ErrorMessages = new List<string>() { "Error in updating user info" };
+                    response.StatusCode = StatusCodes.Status501NotImplemented;
+                    response.DisplayMessage = "Error";
+                    return response;
+                }
+                response.StatusCode = StatusCodes.Status200OK;
+                response.DisplayMessage = "Success";
+                response.Result = "Successfully update user information";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+                response.ErrorMessages = new List<string>() { "Error in updating user info" };
+                response.StatusCode = 500;
+                response.DisplayMessage = "Error";
+                return response;
+            }
+        }
+
+        public async Task<ResponseDto<string>> UploadUserProfilePicture(string email, IFormFile file)
+        {
+            var response = new ResponseDto<string>();
+            try
+            {
+                var findUser = await _accountRepo.FindUserByEmailAsync(email);
+                if (findUser == null)
+                {
+                    response.ErrorMessages = new List<string>() { "There is no user with the email provided" };
+                    response.StatusCode = 404;
+                    response.DisplayMessage = "Error";
+                    return response;
+                }
+                var uploadImage = await _cloudinaryService.UploadPhoto(file, email);
+                if (uploadImage == null)
+                {
+                    response.ErrorMessages = new List<string>() { "Error in uploading profile picture for user" };
+                    response.StatusCode = 501;
+                    response.DisplayMessage = "Error";
+                    return response;
+                }
+                findUser.ProfilePicture = uploadImage.Url.ToString();
+                var updateUserDetails = await _accountRepo.UpdateUserInfo(findUser);
+                if (updateUserDetails == false)
+                {
+                    response.ErrorMessages = new List<string>() { "Error in updating user profile pictures" };
+                    response.StatusCode = StatusCodes.Status501NotImplemented;
+                    response.DisplayMessage = "Error";
+                    return response;
+                }
+                response.StatusCode = StatusCodes.Status200OK;
+                response.DisplayMessage = "Success";
+                response.Result = "Successfully update user profile picture";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+                response.ErrorMessages = new List<string>() { "Error in updating user info" };
+                response.StatusCode = 500;
+                response.DisplayMessage = "Error";
+                return response;
+            }
+        }
 
 
     }

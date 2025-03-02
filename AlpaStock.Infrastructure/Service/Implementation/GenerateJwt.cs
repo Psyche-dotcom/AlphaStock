@@ -37,7 +37,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             {
                 authClaims.Add(new Claim(ClaimTypes.Role, role));
             }
-            var authSigninKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_configuration["JWT:Secret"]));
+            var authSigninKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]));
 
             var token = new JwtSecurityToken(
                 issuer: _configuration["JWT:ValidIssuer"],
@@ -48,5 +48,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             var Jwttoken = new JwtSecurityTokenHandler().WriteToken(token);
             return Jwttoken;
         }
+
+
     }
 }

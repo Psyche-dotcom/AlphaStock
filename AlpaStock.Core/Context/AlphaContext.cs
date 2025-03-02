@@ -10,6 +10,8 @@ namespace AlpaStock.Core.Context
         public DbSet<ForgetPasswordToken> ForgetPasswordTokens { get; set; } 
         public DbSet<Subscription> Subscriptions { get; set; }
         public DbSet<UserSubscription> UserSubscriptions { get; set; }
+        public DbSet<SubscriptionFeatures> SubscriptionFeatures { get; set; }
+        public DbSet<Payments> Payments { get; set; }
         public AlphaContext(DbContextOptions options) : base(options) { }
 
     }

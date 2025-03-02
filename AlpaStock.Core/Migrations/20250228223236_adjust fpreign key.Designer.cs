@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AlpaStock.Core.Migrations
 {
     [DbContext(typeof(AlphaContext))]
-    [Migration("20250217024631_initial migration")]
-    partial class initialmigration
+    [Migration("20250228223236_adjust fpreign key")]
+    partial class adjustfpreignkey
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -169,14 +169,79 @@ namespace AlpaStock.Core.Migrations
                     b.ToTable("ForgetPasswordTokens");
                 });
 
+            modelBuilder.Entity("AlpaStock.Core.Entities.Payments", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Amount")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CompletePaymentTime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CreatedPaymentTime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DateUpdated")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("OrderReferenceId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PaymentStatus")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PaymentType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SubscriptionId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SubscriptionId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Payments");
+                });
+
             modelBuilder.Entity("AlpaStock.Core.Entities.Subscription", b =>
                 {
                     b.Property<string>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("text");
 
-                    b.Property<double>("Amount")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("BillingInterval")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("Created")
                         .HasColumnType("timestamp with time zone");
@@ -184,20 +249,64 @@ namespace AlpaStock.Core.Migrations
                     b.Property<DateTime?>("DateUpdated")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("DiscountRate")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsDIscounted")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
-                    b.Property<string>("Module")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("SubType")
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
 
                     b.ToTable("Subscriptions");
+                });
+
+            modelBuilder.Entity("AlpaStock.Core.Entities.SubscriptionFeatures", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CurrentState")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("DateUpdated")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FeatureName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ShortName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SubscriptionId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SubscriptionId");
+
+                    b.ToTable("SubscriptionFeatures");
                 });
 
             modelBuilder.Entity("AlpaStock.Core.Entities.UserSubscription", b =>
@@ -211,6 +320,9 @@ namespace AlpaStock.Core.Migrations
 
                     b.Property<DateTime?>("DateUpdated")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
@@ -392,10 +504,40 @@ namespace AlpaStock.Core.Migrations
                     b.Navigation("user");
                 });
 
+            modelBuilder.Entity("AlpaStock.Core.Entities.Payments", b =>
+                {
+                    b.HasOne("AlpaStock.Core.Entities.Subscription", "Subscription")
+                        .WithMany("Payments")
+                        .HasForeignKey("SubscriptionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AlpaStock.Core.Entities.ApplicationUser", "User")
+                        .WithMany("Payments")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Subscription");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("AlpaStock.Core.Entities.SubscriptionFeatures", b =>
+                {
+                    b.HasOne("AlpaStock.Core.Entities.Subscription", "Subscription")
+                        .WithMany("SubscriptionFeatures")
+                        .HasForeignKey("SubscriptionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Subscription");
+                });
+
             modelBuilder.Entity("AlpaStock.Core.Entities.UserSubscription", b =>
                 {
                     b.HasOne("AlpaStock.Core.Entities.Subscription", "Subscription")
-                        .WithMany("Subscriptions")
+                        .WithMany("SubscriptionsUser")
                         .HasForeignKey("SubscriptionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -470,12 +612,18 @@ namespace AlpaStock.Core.Migrations
                     b.Navigation("ForgetPasswordToken")
                         .IsRequired();
 
+                    b.Navigation("Payments");
+
                     b.Navigation("Subscriptions");
                 });
 
             modelBuilder.Entity("AlpaStock.Core.Entities.Subscription", b =>
                 {
-                    b.Navigation("Subscriptions");
+                    b.Navigation("Payments");
+
+                    b.Navigation("SubscriptionFeatures");
+
+                    b.Navigation("SubscriptionsUser");
                 });
 #pragma warning restore 612, 618
         }

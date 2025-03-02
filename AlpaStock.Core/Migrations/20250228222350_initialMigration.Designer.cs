@@ -3,6 +3,7 @@ using System;
 using AlpaStock.Core.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AlpaStock.Core.Migrations
 {
     [DbContext(typeof(AlphaContext))]
-    partial class AlphaContextModelSnapshot : ModelSnapshot
+    [Migration("20250228222350_initialMigration")]
+    partial class initialMigration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -37,9 +40,6 @@ namespace AlpaStock.Core.Migrations
                     b.Property<string>("Country")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<DateTime>("Created")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Email")
                         .HasMaxLength(256)
@@ -78,9 +78,6 @@ namespace AlpaStock.Core.Migrations
 
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("boolean");
-
-                    b.Property<string>("ProfilePicture")
-                        .HasColumnType("text");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("text");
@@ -301,8 +298,11 @@ namespace AlpaStock.Core.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("SubscriptionId")
+                    b.Property<string>("SubcriptionId")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SubscriptionId")
                         .HasColumnType("text");
 
                     b.HasKey("Id");
@@ -530,9 +530,7 @@ namespace AlpaStock.Core.Migrations
                 {
                     b.HasOne("AlpaStock.Core.Entities.Subscription", "Subscription")
                         .WithMany("SubscriptionFeatures")
-                        .HasForeignKey("SubscriptionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("SubscriptionId");
 
                     b.Navigation("Subscription");
                 });
