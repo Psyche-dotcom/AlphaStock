@@ -11,6 +11,11 @@ namespace AlpaStock.Core.Entities
         public string? ProfilePicture { get; set; }
         public ICollection<UserSubscription> Subscriptions { get; set; }
         public ICollection<Payments> Payments { get; set; }
+        public ICollection<Comment> Comments { get; set; }
+        public ICollection<BlogPost> BlogPosts { get; set; }
+        public ICollection<BlogPostLike> BlogPostLikes{ get; set; }
+        public ICollection<CommentLike> CommentLikes{ get; set; }
+        public ICollection<CommentReply> CommentReplies{ get; set; }
         public ConfirmEmailToken ConfirmEmailToken { get; set; }
         public ForgetPasswordToken ForgetPasswordToken { get; set; }
         public DateTime Created { get; set; } = DateTime.UtcNow;

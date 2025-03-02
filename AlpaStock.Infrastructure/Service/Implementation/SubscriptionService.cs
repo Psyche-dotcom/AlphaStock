@@ -80,10 +80,10 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 await _subscriptionFeatureRepo.Add(new SubscriptionFeatures
                 {
                     SubscriptionId = AddSubPlan.Id,
-                    Category = "Blog",
+                    Category = "Community Management",
                     CurrentState = "False",
-                    FeatureName = "Blog Management",
-                    ShortName = "BM"
+                    FeatureName = "Community Management",
+                    ShortName = "CM"
                 });
                 await _subscriptionFeatureRepo.SaveChanges();
                 response.StatusCode = 200;
