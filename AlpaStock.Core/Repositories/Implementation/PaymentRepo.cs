@@ -17,8 +17,7 @@ namespace AlpaStock.Core.Repositories.Implementation
             pageNumber = pageNumber < 1 ? 1 : pageNumber;
             perPageSize = perPageSize < 1 ? 5 : perPageSize;
             var payment = _context.Payments
-                .Include(u => u.User)
-                .Include(p => p.Subscription)
+    
                 .Select(p => new PaymentWithUserInfo
             {
                 Id = p.Id,
@@ -37,7 +36,7 @@ namespace AlpaStock.Core.Repositories.Implementation
                 LastName = p.User.LastName,
                 Country = p.User.Country,
                 SubscriptionTypeName = p.Subscription.Name
-            });
+            }).OrderBy(u=>u.CompletePaymentTime);
             var paginatedPayment = await payment
                 .Skip((pageNumber - 1) * perPageSize)
                 .Take(perPageSize)
@@ -60,8 +59,7 @@ namespace AlpaStock.Core.Repositories.Implementation
             pageNumber = pageNumber < 1 ? 1 : pageNumber;
             perPageSize = perPageSize < 1 ? 5 : perPageSize;
             var paymentsWithUserInfo = _context.Payments
-                .Include(p => p.User)
-                .Include(p=>p.Subscription)
+            
                 .Where(p => p.UserId == userid)
                 .Select(p => new PaymentWithUserInfo
                 {
@@ -81,7 +79,7 @@ namespace AlpaStock.Core.Repositories.Implementation
                     LastName = p.User.LastName,
                     Country = p.User.Country,
                     SubscriptionTypeName=p.Subscription.Name
-                });
+                }).OrderBy(u => u.CompletePaymentTime); 
             var paginatedPayment = await paymentsWithUserInfo
                 .Skip((pageNumber - 1) * perPageSize)
                 .Take(perPageSize)

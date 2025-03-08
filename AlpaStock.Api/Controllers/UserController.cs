@@ -124,7 +124,7 @@ namespace AlpaStock.Api.Controllers
             var result = await _accountService.SuspendUserAsync(email);
             if (result.StatusCode == 200)
             {
-                var message = new Message(new string[] { email }, "Suspend", $"<p>You have been suspended on lucky crush, please contact admin<p>");
+                var message = new Message(new string[] { email }, "Suspend", $"<p>You have been suspended on alpha stock, please contact admin<p>");
                 _emailServices.SendEmail(message);
                 return Ok(result);
             }
@@ -144,7 +144,7 @@ namespace AlpaStock.Api.Controllers
             var result = await _accountService.UnSuspendUserAsync(email);
             if (result.StatusCode == 200)
             {
-                var message = new Message(new string[] { email }, "Unsuspend", $"<p>Congrat, you have been unsuspended on lucky crush, you can continue to use our service<p>");
+                var message = new Message(new string[] { email }, "Unsuspend", $"<p>Congrat, you have been unsuspended on alpha stock, you can continue to use our service<p>");
                 _emailServices.SendEmail(message);
                 return Ok(result);
             }

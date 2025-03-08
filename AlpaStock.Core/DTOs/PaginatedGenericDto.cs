@@ -6,6 +6,5 @@
         public int PageSize { get; set; }
         public int TotalPages { get; set; }
         public T Result { get; set; }
-        public decimal TotalStaffCount { get; set; }
     }
 }

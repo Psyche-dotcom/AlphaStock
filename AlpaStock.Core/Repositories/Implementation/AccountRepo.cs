@@ -216,7 +216,7 @@ namespace AlpaStock.Core.Repositories.Implementation
 
             if (!string.IsNullOrEmpty(name))
             {
-                query = query.Where(u => (u.User.FirstName + " " + u.User.LastName).Contains(name));
+                query = query.Where(u => (u.User.FirstName + " " + u.User.LastName).ToLower().Contains(name.ToLower()));
             }
 
             var filteredUser = query.Select(u => new DisplayFindUserDTO
