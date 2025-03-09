@@ -28,9 +28,10 @@ namespace AlpaStock.Api.Extension
             services.AddAutoMapper(typeof(ProjectProfile));
             services.AddScoped<ISubscriptionService, SubscriptionService>();
             services.AddScoped<IBlogService, BlogService>();
-
-
-
+            services.AddScoped<IApiClient, ApiClient>();
+            services.AddScoped<IStockStreamService, StockStreamService>();
+            services.AddScoped<IStockService, StockService>();
+            services.AddHttpClient();
         }
     }
 }

@@ -2,7 +2,6 @@
 using AlpaStock.Core.DTOs.Request.Blog;
 using AlpaStock.Core.DTOs.Response.Blog;
 using AlpaStock.Core.Entities;
-using AlpaStock.Core.Repositories.Implementation;
 using AlpaStock.Core.Repositories.Interface;
 using AlpaStock.Core.Util;
 using AlpaStock.Infrastructure.Service.Interface;
@@ -443,7 +442,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             try
             {
                 var AddSubPlan = await _blogPostRepo.GetByIdAsync(BlogPostId);
-                if(AddSubPlan == null)
+                if (AddSubPlan == null)
                 {
                     response.StatusCode = 404;
                     response.DisplayMessage = "Error";
@@ -474,7 +473,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             var response = new ResponseDto<string>();
             try
             {
-               var UniqueFile = fileName + _accountRepo.GenerateToken();
+                var UniqueFile = fileName + _accountRepo.GenerateToken();
                 var uploadImage = await _cloudinaryService.UploadPhoto(file, fileName);
                 if (uploadImage == null)
                 {
@@ -483,7 +482,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     response.DisplayMessage = "Error";
                     return response;
                 }
-              
+
                 response.StatusCode = StatusCodes.Status200OK;
                 response.DisplayMessage = "Success";
                 response.Result = uploadImage.Url.ToString();

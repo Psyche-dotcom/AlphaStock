@@ -3,6 +3,7 @@ using System;
 using AlpaStock.Core.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AlpaStock.Core.Migrations
 {
     [DbContext(typeof(AlphaContext))]
-    partial class AlphaContextModelSnapshot : ModelSnapshot
+    [Migration("20250308222139_add community entity")]
+    partial class addcommunityentity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -636,42 +639,6 @@ namespace AlpaStock.Core.Migrations
                     b.ToTable("Payments");
                 });
 
-            modelBuilder.Entity("AlpaStock.Core.Entities.StockWishList", b =>
-                {
-                    b.Property<string>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("Created")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("DateUpdated")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<decimal>("LowerLimit")
-                        .HasColumnType("numeric");
-
-                    b.Property<string>("StockSymbols")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<decimal>("UpperLimit")
-                        .HasColumnType("numeric");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("StockWishLists");
-                });
-
             modelBuilder.Entity("AlpaStock.Core.Entities.Subscription", b =>
                 {
                     b.Property<string>("Id")
@@ -1200,17 +1167,6 @@ namespace AlpaStock.Core.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("AlpaStock.Core.Entities.StockWishList", b =>
-                {
-                    b.HasOne("AlpaStock.Core.Entities.ApplicationUser", "User")
-                        .WithMany("StockWishList")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("AlpaStock.Core.Entities.SubscriptionFeatures", b =>
                 {
                     b.HasOne("AlpaStock.Core.Entities.Subscription", "Subscription")
@@ -1342,8 +1298,6 @@ namespace AlpaStock.Core.Migrations
                         .IsRequired();
 
                     b.Navigation("Payments");
-
-                    b.Navigation("StockWishList");
 
                     b.Navigation("Subscriptions");
 
