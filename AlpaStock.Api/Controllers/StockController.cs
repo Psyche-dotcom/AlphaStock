@@ -1,9 +1,11 @@
 ﻿using AlpaStock.Core.DTOs.Response.Stock;
+using AlpaStock.Infrastructure.Service.Implementation;
 using AlpaStock.Infrastructure.Service.Interface;
 using AutoMapper.Internal;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using Org.BouncyCastle.Ocsp;
 
 namespace AlpaStock.Api.Controllers
 {
@@ -17,24 +19,26 @@ namespace AlpaStock.Api.Controllers
         {
             _stockService = stockService;
         }
-        [HttpGet("stock_list/all")]
-        public async Task<IActionResult> GetAllStockList()
+        
+        [HttpGet("quote")]
+        public async Task<IActionResult> GetStockQuote(string symbol)
         {
-            using (var httpClient = new HttpClient())
+            var result = await _stockService.GetStockQuote(symbol);
+
+            if (result.StatusCode == 200 || result.StatusCode == 201)
             {
-                using (var request = new HttpRequestMessage(new HttpMethod("GET"), "https://financialmodelingprep.com/stable/stock-list?apikey=ZFMP0r5vu73PTyBkn56irPTH80ujvR7u"))
-                {
-                    request.Headers.TryAddWithoutValidation("Upgrade-Insecure-Requests", "1");
-                    var response = await httpClient.SendAsync(request);
-                    var result = JsonConvert.DeserializeObject<IEnumerable<AllStockListResponse>>(await response.Content.ReadAsStringAsync());
-                    return Ok(result);
-                }
+                return Ok(result);
             }
-            
+            else if (result.StatusCode == 404)
+            {
+                return NotFound(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
 
-           
 
-           
         }
     }
 

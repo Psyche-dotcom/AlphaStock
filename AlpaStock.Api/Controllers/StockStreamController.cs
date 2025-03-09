@@ -1,4 +1,4 @@
-﻿/*using AlpaStock.Infrastructure.Service.Interface;
+﻿using AlpaStock.Infrastructure.Service.Interface;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AlpaStock.Api.Controllers
@@ -34,8 +34,7 @@ namespace AlpaStock.Api.Controllers
                 _logger.LogError(ex, "Error occurred in SSE stream.");
             }
         }
-       
+
 
     }
 }
-*/

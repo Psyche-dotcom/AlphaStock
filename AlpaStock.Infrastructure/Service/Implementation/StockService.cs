@@ -1,6 +1,7 @@
 ﻿using AlpaStock.Core.DTOs;
 using AlpaStock.Core.DTOs.Response.Stock;
 using AlpaStock.Infrastructure.Service.Interface;
+using CloudinaryDotNet.Actions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -26,28 +27,25 @@ namespace AlpaStock.Infrastructure.Service.Implementation
 
        
 
-        public async Task<ResponseDto<IEnumerable<AllStockListResponse>>> GetStockList()
+        public async Task<ResponseDto<IEnumerable<StockResp>>> GetStockQuote( string symbol)
         {
-            var response = new ResponseDto<IEnumerable<AllStockListResponse>>();
+            var response = new ResponseDto<IEnumerable<StockResp>>();
             try
             {
-                
-                
-                
-                
-                var apiUrl = _baseUrl + "stable/stock-list";
+
+                var apiUrl = _baseUrl + $"stable/quote?symbol={symbol}";
                 var makeRequest = await _apiClient.GetAsync<string>(apiUrl);
                 if (!makeRequest.IsSuccessful)
                 {
-                    _logger.LogError("stock list error mess", makeRequest.ErrorMessage);
-                    _logger.LogError("stock list error ex", makeRequest.ErrorException);
-                    _logger.LogError("stock list error con", makeRequest.Content);
+                    _logger.LogError("stock quote error mess", makeRequest.ErrorMessage);
+                    _logger.LogError("stock quote error ex", makeRequest.ErrorException);
+                    _logger.LogError("stock quote error con", makeRequest.Content);
                     response.StatusCode = 400;
                     response.DisplayMessage = "Error";
-                    response.ErrorMessages = new List<string>() { "Unable to get the stock list" };
+                    response.ErrorMessages = new List<string>() { "Unable to get the stock quote" };
                     return response;
                 }
-                var result = JsonConvert.DeserializeObject<IEnumerable<AllStockListResponse>>(makeRequest.Content);
+                var result = JsonConvert.DeserializeObject<IEnumerable<StockResp>>(makeRequest.Content);
                 if (!result.Any())
                 {
                     response.StatusCode = 400;

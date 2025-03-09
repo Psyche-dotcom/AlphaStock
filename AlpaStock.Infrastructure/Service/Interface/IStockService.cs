@@ -5,6 +5,6 @@ namespace AlpaStock.Infrastructure.Service.Interface
 {
     public interface IStockService
     {
-        Task<ResponseDto<IEnumerable<AllStockListResponse>>> GetStockList();
+        Task<ResponseDto<IEnumerable<StockResp>>> GetStockQuote(string symbol);
     }
 }
