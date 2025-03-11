@@ -27,7 +27,7 @@ namespace AlpaStock.Api.Controllers
             {
                 await foreach (var stock in _stockService.GetStockMarketLeaderAsync(leaderType))
                 {
-                   
+                    _logger.LogInformation($"Sending stock data: {stock}");
                     await Response.WriteAsync($"data: {stock}\n\n");
                     await Response.Body.FlushAsync();
                 }
