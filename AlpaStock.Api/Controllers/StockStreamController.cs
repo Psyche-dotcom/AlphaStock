@@ -1,5 +1,6 @@
 ﻿using AlpaStock.Infrastructure.Service.Interface;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace AlpaStock.Api.Controllers
 {
@@ -28,7 +29,8 @@ namespace AlpaStock.Api.Controllers
                 await foreach (var stock in _stockService.GetStockMarketLeaderAsync(leaderType))
                 {
                     _logger.LogInformation($"Sending stock data: {stock}");
-                    await Response.WriteAsync($"data: hi am here streaming\n\n");
+                    var jsonData = JsonConvert.SerializeObject(stock);
+                    await Response.WriteAsync($"data: {jsonData}\n\n");
                     await Response.Body.FlushAsync();
                 }
             }
