@@ -3,6 +3,7 @@
     public class CommunityChannel : BaseEntity
     {
         public string Name { get; set; }
+        public string ChannelRoomId { get; set; }
         public string CategoryId { get; set; }
         public ChannelCategory Category { get; set; }
         public string CreatedByUserId { get; set; }

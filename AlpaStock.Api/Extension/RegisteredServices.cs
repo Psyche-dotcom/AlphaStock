@@ -27,6 +27,7 @@ namespace AlpaStock.Api.Extension
             services.AddScoped<ICloudinaryService, CloudinaryService>();
             services.AddAutoMapper(typeof(ProjectProfile));
             services.AddScoped<ISubscriptionService, SubscriptionService>();
+            services.AddScoped<ICommunityService, CommunityService>();
             services.AddScoped<IBlogService, BlogService>();
             services.AddScoped<IApiClient, ApiClient>();
             services.AddScoped<IStockStreamService, StockStreamService>();

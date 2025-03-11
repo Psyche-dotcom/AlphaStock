@@ -42,36 +42,6 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             _accountRepo = accountRepo;
         }
 
-        public async Task<ResponseDto<string>> CreateBlogReq(AddContentReq req, string userid)
-        {
-            var response = new ResponseDto<string>();
-            try
-            {
-                var AddSubPlan = await _blogPostRepo.Add(new()
-                {
-                    BlogThumbnailUrl = req.BlogThumbnailUrl,
-                    Title = req.Title,
-                    Content = req.Content,
-                    UserId = userid,
-                    Category = req.Category,
-
-                });
-
-                await _blogPostRepo.SaveChanges();
-                response.StatusCode = 200;
-                response.DisplayMessage = "Success";
-                response.Result = "Blog Created Successfully";
-                return response;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex.Message, ex);
-                response.DisplayMessage = "Error";
-                response.ErrorMessages = new List<string>() { "Blog not created successfully" };
-                response.StatusCode = 400;
-                return response;
-            }
-        }
         public async Task<ResponseDto<string>> BlogLikeAndUnlike(LikeBlogReq req, string userid)
         {
             var response = new ResponseDto<string>();
@@ -135,6 +105,36 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 _logger.LogError(ex.Message, ex);
                 response.DisplayMessage = "Error";
                 response.ErrorMessages = new List<string>() { "Comment not added successfully" };
+                response.StatusCode = 400;
+                return response;
+            }
+        }
+        public async Task<ResponseDto<string>> CreateBlogReq(AddContentReq req, string userid)
+        {
+            var response = new ResponseDto<string>();
+            try
+            {
+                var AddSubPlan = await _blogPostRepo.Add(new()
+                {
+                    BlogThumbnailUrl = req.BlogThumbnailUrl,
+                    Title = req.Title,
+                    Content = req.Content,
+                    UserId = userid,
+                    Category = req.Category,
+
+                });
+
+                await _blogPostRepo.SaveChanges();
+                response.StatusCode = 200;
+                response.DisplayMessage = "Success";
+                response.Result = "Blog Created Successfully";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+                response.DisplayMessage = "Error";
+                response.ErrorMessages = new List<string>() { "Blog not created successfully" };
                 response.StatusCode = 400;
                 return response;
             }

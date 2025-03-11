@@ -20,11 +20,14 @@ namespace AlpaStock.Api.Controllers
         public async Task GetStockByLeaderType(string leaderType)
         {
             Response.Headers.Add("Content-Type", "text/event-stream");
+            Response.Headers.Add("Cache-Control", "no-cache");
+            Response.Headers.Add("Connection", "keep-alive");
 
             try
             {
                 await foreach (var stock in _stockService.GetStockMarketLeaderAsync(leaderType))
                 {
+                   
                     await Response.WriteAsync($"data: {stock}\n\n");
                     await Response.Body.FlushAsync();
                 }

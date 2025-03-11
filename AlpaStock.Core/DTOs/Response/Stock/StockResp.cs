@@ -28,11 +28,8 @@ namespace AlpaStock.Core.DTOs.Response.Stock
         public double dayHigh { get; set; }
 
         public double yearHigh { get; set; }
-
      
         public double yearLow { get; set; }
-
-
         public long marketCap { get; set; }
 
         public double priceAvg50 { get; set; }
