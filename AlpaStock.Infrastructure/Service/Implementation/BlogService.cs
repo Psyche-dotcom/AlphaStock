@@ -213,7 +213,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             try
             {
                 pageNumber = Math.Max(pageNumber, 1);
-                perPageSize = Math.Max(perPageSize, 5);
+                perPageSize = Math.Max(perPageSize, 4);
 
                 var retrieveBlog = _blogPostRepo.GetQueryable();
 
