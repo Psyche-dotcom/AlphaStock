@@ -44,10 +44,10 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             _paymentdb = paymentdb;
         }
 
-        public async Task<ResponseDto<Dictionary<string, string>>> MakeOrder(string userid, string planid)
+        public async Task<ResponseDto<string>> MakeOrder(string userid, string planid)
         {
 
-            var result = new ResponseDto<Dictionary<string, string>>();
+            var result = new ResponseDto<string>();
 
             try
             {
@@ -77,7 +77,8 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     await _paymentRepo.SaveChanges();
 
                     var data = order.Links.ToDictionary(links => links.Rel, links => links.Href);
-                    result.Result = data;
+                    string approveUrl = data["approve"]?.ToString();
+                    result.Result = approveUrl;
                     result.DisplayMessage = "Payment successfully initialize";
                     result.StatusCode = 201;
                     return result;

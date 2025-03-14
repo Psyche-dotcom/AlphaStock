@@ -377,7 +377,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 }
                 response.StatusCode = StatusCodes.Status200OK;
                 response.DisplayMessage = "Success";
-                response.Result = "Successfully comfirm user token";
+                response.Result = "Successfully confirm user token";
                 return response;
             }
             catch (Exception ex)
