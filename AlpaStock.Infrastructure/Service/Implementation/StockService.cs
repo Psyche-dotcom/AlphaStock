@@ -231,6 +231,51 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 return response;
             }
         }
+
+
+        public async Task<ResponseDto<IEnumerable<StockDataHistoryData>>> HistoryCalPriceEOD(string symbol, string startdate, string enddate)
+        {
+            var response = new ResponseDto<IEnumerable<StockDataHistoryData>>();
+            try
+            {
+
+   
+                var apiUrl = _baseUrl + $"stable/historical-price-eod/full?symbol={symbol}&from={startdate}&to={enddate}";
+                var makeRequest = await _apiClient.GetAsync<string>(apiUrl);
+                if (!makeRequest.IsSuccessful)
+                {
+                    _logger.LogError("historical-price-eod error mess", makeRequest.ErrorMessage);
+                    _logger.LogError("historical-price-eod error ex", makeRequest.ErrorException);
+                    _logger.LogError("historical-price-eod error con", makeRequest.Content);
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Unable to get the stock historical-price-eod statement" };
+                    return response;
+                }
+                var result = JsonConvert.DeserializeObject<IEnumerable<StockDataHistoryData>>(makeRequest.Content);
+                if (!result.Any())
+                {
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Stock historical-price-eod is empty" };
+                    return response;
+                }
+                response.StatusCode = 200;
+                response.DisplayMessage = "Success";
+                response.Result = result;
+                return response;
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"cash-flow-statement ex - {ex.Message}", ex);
+                response.ErrorMessages = new List<string> { "Unable to get the stock historical-price-eod at the moment" };
+                response.StatusCode = 500;
+                response.DisplayMessage = "Error";
+                return response;
+            }
+        }
+
         public async Task<ResponseDto<string>> AddStockWishList(string userid, string stockSymbol, decimal lowerLimit, decimal upperLimit)
         {
             var response = new ResponseDto<string>();
