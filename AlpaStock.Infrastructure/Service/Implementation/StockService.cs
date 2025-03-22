@@ -432,7 +432,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     return response;
                 }
 
-                metricFirst.RevenuePerShare = resultRatio[0].RevenuePerShare; 
+                metricFirst.RevenuePerShare = resultRatio[0].RevenuePerShare.ToString(); 
                 metricFirst.PToERatio = resultRatio[0].PriceToEarningsRatio.ToString();
                 metricFirst.PToERatioFive5yrs = resultRatio[4].PriceToEarningsRatio.ToString();
                 metricFirst.PSRatio = resultRatio[0].PriceToSalesRatio.ToString();
@@ -456,6 +456,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 metricThird.ReturnOnAsset = result[0].ReturnOnAssets.ToString();
                 metricThird.ReturnOnEquity = result[0].ReturnOnEquity.ToString();
                 metricThird.ReturnOnInvestedCapitalTTM = resultTTM[0].ReturnOnInvestedCapitalTTM.ToString();
+                metricThird.CurrentPrice = getQuote.Result[0].price.ToString();
                 metricThird.ADayHigh = getQuote.Result[0].dayHigh.ToString();
                 metricThird.ADaylow = getQuote.Result[0].dayLow.ToString();
                 metricThird.AYearHigh = getQuote.Result[0].yearHigh.ToString();

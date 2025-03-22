@@ -2,9 +2,9 @@
 {
     public class MetricFirst
     {
-        public double RevenuePerShare { get; set; }
-        public long Revenue { get; set; }
-        public long NetIcomeTTM { get; set; }
+        public string RevenuePerShare { get; set; }
+        public string Revenue { get; set; }
+        public string NetIcomeTTM { get; set; }
         public string FiveyearAvgNetIncome { get; set; }
         public string PToERatioFive5yrs { get; set; }
         public string PToERatio { get; set; }
