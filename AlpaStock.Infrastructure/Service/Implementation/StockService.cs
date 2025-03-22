@@ -486,8 +486,8 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             }
             catch (Exception ex)
             {
-                _logger.LogError($"cash-flow-statement ex - {ex.Message}", ex);
-                response.ErrorMessages = new List<string> { "Unable to get the stock historical-price-eod at the moment" };
+                _logger.LogError($"metric ex - {ex.Message}", ex);
+                response.ErrorMessages = new List<string> { "Unable to get the stock metric at the moment" };
                 response.StatusCode = 500;
                 response.DisplayMessage = "Error";
                 return response;

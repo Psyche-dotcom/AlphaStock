@@ -16,8 +16,6 @@
         public double NetDebtToEBITDA { get; set; }
         public double CurrentRatio { get; set; }
         public double IncomeQuality { get; set; }
-        public double GrahamNumber { get; set; }
-        public double GrahamNetNet { get; set; }
         public double TaxBurden { get; set; }
         public double InterestBurden { get; set; }
         public long WorkingCapital { get; set; }
