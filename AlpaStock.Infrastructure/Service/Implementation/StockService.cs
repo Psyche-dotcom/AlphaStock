@@ -26,9 +26,9 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             _configuration = configuration;
             _baseUrl = _configuration["FMP:BASEURL"];
         }
-        public async Task<ResponseDto<IEnumerable<StockResp>>> GetStockQuote(string symbol)
+        public async Task<ResponseDto<List<StockResp>>> GetStockQuote(string symbol)
         {
-            var response = new ResponseDto<IEnumerable<StockResp>>();
+            var response = new ResponseDto<List<StockResp>>();
             try
             {
 
@@ -44,7 +44,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     response.ErrorMessages = new List<string>() { "Unable to get the stock quote" };
                     return response;
                 }
-                var result = JsonConvert.DeserializeObject<IEnumerable<StockResp>>(makeRequest.Content);
+                var result = JsonConvert.DeserializeObject<List<StockResp>>(makeRequest.Content);
                 if (!result.Any())
                 {
                     response.StatusCode = 400;
@@ -326,6 +326,170 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 response.DisplayMessage = "Error";
                 response.ErrorMessages = new List<string>() { "Get Stock wish list service not available" };
                 response.StatusCode = 400;
+                return response;
+            }
+        }
+
+
+
+        public async Task<ResponseDto<FundamentalMetricData>> Metrics(string symbol, string period)
+        {
+            var response = new ResponseDto<FundamentalMetricData>();
+            var metricFirst = new MetricFirst();
+            var metricSecond = new MetricSecond();
+            var metricThird = new MetricThird();
+            try
+            {
+                var getQuote = await GetStockQuote(symbol);
+                if(getQuote.StatusCode != 200)
+                {
+                    response.StatusCode = getQuote.StatusCode;
+                    response.DisplayMessage = getQuote.DisplayMessage;
+                    response.ErrorMessages = getQuote.ErrorMessages;
+                    return response;
+                }
+
+                var apiUrlKey = _baseUrl + $"stable/key-metrics?symbol={symbol}&limit=5&period={period}";
+                var makeRequest = await _apiClient.GetAsync<string>(apiUrlKey);
+                if (!makeRequest.IsSuccessful)
+                {
+                    _logger.LogError("key-metrics error mess", makeRequest.ErrorMessage);
+                    _logger.LogError("key-metrics error ex", makeRequest.ErrorException);
+                    _logger.LogError("key-metrics error con", makeRequest.Content);
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Unable to get the stock key-metrics" };
+                    return response;
+                }
+                var result = JsonConvert.DeserializeObject<List<KeyMetricRes>>(makeRequest.Content);
+                if (!result.Any())
+                {
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Stock key-metrics is empty" };
+                    return response;
+                }
+
+                var apiUrlRatio = _baseUrl + $"stable/ratios?symbol={symbol}&limit=5&period={period}";
+                var makeRequestRatio = await _apiClient.GetAsync<string>(apiUrlRatio);
+                if (!makeRequestRatio.IsSuccessful)
+                {
+                    _logger.LogError("Ratio error mess", makeRequestRatio.ErrorMessage);
+                    _logger.LogError("Ratio error ex", makeRequestRatio.ErrorException);
+                    _logger.LogError("Ratio error con", makeRequestRatio.Content);
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Unable to get the stock Ratio" };
+                    return response;
+                }
+                var resultRatio = JsonConvert.DeserializeObject<List<RatioDataResp>>(makeRequestRatio.Content);
+                if (!resultRatio.Any())
+                {
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Stock Ratio is empty" };
+                    return response;
+                }
+
+                var apiUrlKeyTTM = _baseUrl + $"stable/key-metrics-ttm?symbol={symbol}&limit=5";
+                var makeRequestTTM = await _apiClient.GetAsync<string>(apiUrlKeyTTM);
+                if (!makeRequestTTM.IsSuccessful)
+                {
+                    _logger.LogError("key-metricsTTM error mess", makeRequestTTM.ErrorMessage);
+                    _logger.LogError("key-metricsTTM error ex", makeRequestTTM.ErrorException);
+                    _logger.LogError("key-metricsTTM error con", makeRequestTTM.Content);
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Unable to get the stock key-metricsTTM" };
+                    return response;
+                }
+                var resultTTM = JsonConvert.DeserializeObject<List<KeyMetricTTMRep>>(makeRequestTTM.Content);
+                if (!resultTTM.Any())
+                {
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Stock key-metricsTTM is empty" };
+                    return response;
+                }
+                var apiUrlRatioTTM = _baseUrl + $"stable/ratios-ttm?symbol={symbol}&limit=5";
+                var makeRequestRatioTTM = await _apiClient.GetAsync<string>(apiUrlRatioTTM);
+                if (!makeRequestRatioTTM.IsSuccessful)
+                {
+                    _logger.LogError("ratios-ttm error mess", makeRequestRatioTTM.ErrorMessage);
+                    _logger.LogError("ratios-ttm error ex", makeRequestRatioTTM.ErrorException);
+                    _logger.LogError("ratios-ttm error con", makeRequestRatioTTM.Content);
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Unable to get the stock ratios-ttm" };
+                    return response;
+                }
+                var resultRatioTTM = JsonConvert.DeserializeObject<IEnumerable<RatioTTMResp>>(makeRequestRatioTTM.Content);
+                if (!resultRatioTTM.Any())
+                {
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Stock ratios-ttm is empty" };
+                    return response;
+                }
+
+                metricFirst.RevenuePerShare = resultRatio[0].RevenuePerShare; 
+                metricFirst.PToERatio = resultRatio[0].PriceToEarningsRatio.ToString();
+                metricFirst.PToERatioFive5yrs = resultRatio[4].PriceToEarningsRatio.ToString();
+                metricFirst.PSRatio = resultRatio[0].PriceToSalesRatio.ToString();
+                metricFirst.PSRatioFive5yrs = resultRatio[4].PriceToSalesRatio.ToString();
+                metricFirst.GrossProfitMargin = resultRatio[0].GrossProfitMargin.ToString();
+
+
+                metricSecond.EnterpriseValue = result[0].EnterpriseValue.ToString();
+                metricSecond.EV5YEARS = result[4].EnterpriseValue.ToString();
+                metricSecond.EVToSales = result[0].EvToSales.ToString();
+                metricSecond.EVToSales5yrs = result[4].EvToSales.ToString();
+                metricSecond.EVToFCF5yrs = result[4].EvToFreeCashFlow.ToString();
+                metricSecond.EVToFCF = result[0].EvToFreeCashFlow.ToString();
+                metricSecond.FreeCashFlowYield = result[0].FreeCashFlowYield.ToString();
+                metricSecond.FiveYearAvgFreeCashFlowYield = result[4].FreeCashFlowYield.ToString();
+                metricSecond.DividendsYieldTTM = resultRatio[0].DividendYield.ToString();
+                metricSecond.FCFTTMTOEQUITYTTM = resultTTM[0].FreeCashFlowToEquityTTM.ToString();
+
+
+
+                metricThird.ReturnOnAsset = result[0].ReturnOnAssets.ToString();
+                metricThird.ReturnOnEquity = result[0].ReturnOnEquity.ToString();
+                metricThird.ReturnOnInvestedCapitalTTM = resultTTM[0].ReturnOnInvestedCapitalTTM.ToString();
+                metricThird.ADayHigh = getQuote.Result[0].dayHigh.ToString();
+                metricThird.ADaylow = getQuote.Result[0].dayLow.ToString();
+                metricThird.AYearHigh = getQuote.Result[0].yearHigh.ToString();
+                metricThird.AYearlow = getQuote.Result[0].yearLow.ToString();
+                metricThird.name = getQuote.Result[0].name.ToString();
+                metricThird.Symbol = getQuote.Result[0].symbol.ToString();
+                metricThird.volume = getQuote.Result[0].volume.ToString();
+                metricThird.previousClose  = getQuote.Result[0].previousClose.ToString();
+                metricThird.priceAvg200 = getQuote.Result[0].priceAvg200.ToString();
+                metricThird.change  = getQuote.Result[0].change.ToString();
+                metricThird.MarketCap = getQuote.Result[0].marketCap.ToString();
+                metricThird.priceAvg50 = getQuote.Result[0].priceAvg50.ToString();
+                metricThird.exchange = getQuote.Result[0].exchange.ToString();
+
+
+
+
+                var resultFinal = new FundamentalMetricData();
+
+                resultFinal.metricFirst = metricFirst; 
+                resultFinal.metricSecond = metricSecond; 
+                resultFinal.metricThird = metricThird;
+                response.StatusCode = 200;
+                response.DisplayMessage = "Success";
+                response.Result = resultFinal;
+                return response;
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"cash-flow-statement ex - {ex.Message}", ex);
+                response.ErrorMessages = new List<string> { "Unable to get the stock historical-price-eod at the moment" };
+                response.StatusCode = 500;
+                response.DisplayMessage = "Error";
                 return response;
             }
         }
