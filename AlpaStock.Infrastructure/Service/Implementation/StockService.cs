@@ -456,20 +456,18 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 metricThird.ReturnOnAsset = result[0].ReturnOnAssets.ToString();
                 metricThird.ReturnOnEquity = result[0].ReturnOnEquity.ToString();
                 metricThird.ReturnOnInvestedCapitalTTM = resultTTM[0].ReturnOnInvestedCapitalTTM.ToString();
-                metricThird.CurrentPrice =  "$" +getQuote.Result[0].price.ToString();
+             
                 metricThird.ADayHigh = getQuote.Result[0].dayHigh.ToString();
                 metricThird.ADaylow = getQuote.Result[0].dayLow.ToString();
                 metricThird.AYearHigh = getQuote.Result[0].yearHigh.ToString();
                 metricThird.AYearlow = getQuote.Result[0].yearLow.ToString();
-                metricThird.name = getQuote.Result[0].name.ToString();
-                metricThird.Symbol = getQuote.Result[0].symbol.ToString();
-                metricThird.volume = getQuote.Result[0].volume.ToString();
+              
                 metricThird.previousClose  = getQuote.Result[0].previousClose.ToString();
                 metricThird.priceAvg200 = getQuote.Result[0].priceAvg200.ToString();
-                metricThird.change  = getQuote.Result[0].change.ToString();
-                metricThird.MarketCap = getQuote.Result[0].marketCap.ToString();
+         
+           
                 metricThird.priceAvg50 = getQuote.Result[0].priceAvg50.ToString();
-                metricThird.exchange = getQuote.Result[0].exchange.ToString();
+             
 
 
 
