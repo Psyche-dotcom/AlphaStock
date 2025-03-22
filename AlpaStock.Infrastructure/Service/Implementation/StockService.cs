@@ -456,7 +456,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 metricThird.ReturnOnAsset = result[0].ReturnOnAssets.ToString();
                 metricThird.ReturnOnEquity = result[0].ReturnOnEquity.ToString();
                 metricThird.ReturnOnInvestedCapitalTTM = resultTTM[0].ReturnOnInvestedCapitalTTM.ToString();
-                metricThird.CurrentPrice = getQuote.Result[0].price.ToString();
+                metricThird.CurrentPrice =  "$" +getQuote.Result[0].price.ToString();
                 metricThird.ADayHigh = getQuote.Result[0].dayHigh.ToString();
                 metricThird.ADaylow = getQuote.Result[0].dayLow.ToString();
                 metricThird.AYearHigh = getQuote.Result[0].yearHigh.ToString();
