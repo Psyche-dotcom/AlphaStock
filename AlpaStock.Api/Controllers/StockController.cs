@@ -124,6 +124,27 @@ namespace AlpaStock.Api.Controllers
                 return BadRequest(result);
             }
         }
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpGet("get-wishlist-is-added")]
+        public async Task<IActionResult> CheckWishListAsync(string symbol)
+        {
+            var userid = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Jti)?.Value;
+
+            var result = await _stockService.IsAddStockWishList(userid, symbol);
+
+            if (result.StatusCode == 200 || result.StatusCode == 201)
+            {
+                return Ok(result);
+            }
+            else if (result.StatusCode == 404)
+            {
+                return NotFound(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+        }
         [HttpGet("info/profile")]
         public async Task<IActionResult> GetStockProfile(string symbol)
         {

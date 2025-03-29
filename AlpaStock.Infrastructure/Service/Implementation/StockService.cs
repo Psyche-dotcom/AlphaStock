@@ -4,7 +4,6 @@ using AlpaStock.Core.DTOs.Response.Stock;
 using AlpaStock.Core.Entities;
 using AlpaStock.Core.Repositories.Interface;
 using AlpaStock.Infrastructure.Service.Interface;
-using CloudinaryDotNet.Actions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -243,7 +242,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             try
             {
 
-   
+
                 var apiUrl = _baseUrl + $"stable/historical-price-eod/full?symbol={symbol}&from={startdate}&to={enddate}";
                 var makeRequest = await _apiClient.GetAsync<string>(apiUrl);
                 if (!makeRequest.IsSuccessful)
@@ -285,9 +284,9 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             var response = new ResponseDto<string>();
             try
             {
-                var check = await _stockWishRepo.GetQueryable().FirstOrDefaultAsync(u=>u.UserId == userid && 
+                var check = await _stockWishRepo.GetQueryable().FirstOrDefaultAsync(u => u.UserId == userid &&
                 u.StockSymbols.ToLower() == stockSymbol.ToLower());
-                if(check != null)
+                if (check != null)
                 {
                     response.DisplayMessage = "Error";
                     response.ErrorMessages = new List<string>() { "Stock already added to wishlist" };
@@ -317,13 +316,42 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 return response;
             }
         }
-        public async Task<ResponseDto<string>> UpdateStockWishList( string stockwishlistId, decimal lowerLimit, decimal upperLimit)
+
+        public async Task<ResponseDto<bool>> IsAddStockWishList(string userid, string stockSymbol)
+        {
+            var response = new ResponseDto<bool>();
+            try
+            {
+                var check = await _stockWishRepo.GetQueryable().FirstOrDefaultAsync(u => u.UserId == userid &&
+                u.StockSymbols.ToLower() == stockSymbol.ToLower());
+                if (check != null)
+                {
+                    response.StatusCode = 200;
+                    response.DisplayMessage = "Success";
+                    response.Result = true;
+                    return response;
+                }
+                response.StatusCode = 200;
+                response.DisplayMessage = "Success";
+                response.Result = false;
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+                response.DisplayMessage = "Error";
+                response.ErrorMessages = new List<string>() { "unable to check Stock wish list service not available" };
+                response.StatusCode = 400;
+                return response;
+            }
+        }
+        public async Task<ResponseDto<string>> UpdateStockWishList(string stockwishlistId, decimal lowerLimit, decimal upperLimit)
         {
             var response = new ResponseDto<string>();
             try
             {
                 var retrieve = await _stockWishRepo.GetQueryable().FirstOrDefaultAsync(u => u.Id == stockwishlistId);
-                if(retrieve == null)
+                if (retrieve == null)
                 {
 
                     response.StatusCode = 404;
@@ -349,14 +377,14 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 response.StatusCode = 400;
                 return response;
             }
-        }  
+        }
         public async Task<ResponseDto<string>> DeleteStockWishList(string stockwishlistId)
         {
             var response = new ResponseDto<string>();
             try
             {
                 var retrieve = await _stockWishRepo.GetQueryable().FirstOrDefaultAsync(u => u.Id == stockwishlistId);
-                if(retrieve == null)
+                if (retrieve == null)
                 {
 
                     response.StatusCode = 404;
@@ -364,7 +392,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     response.ErrorMessages = new List<string>() { "Stock wishlist is available" };
                     return response;
                 }
-                
+
                 _stockWishRepo.Delete(retrieve);
 
                 await _stockWishRepo.SaveChanges();
@@ -389,7 +417,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             try
             {
 
-                var result = await _stockWishRepo.GetQueryable().Where(u=>u.UserId == userid).ToListAsync();
+                var result = await _stockWishRepo.GetQueryable().Where(u => u.UserId == userid).ToListAsync();
                 var Data = new List<StockWishListResp>();
                 foreach (var item in result)
                 {
@@ -408,7 +436,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                         });
                     }
                 }
-               
+
                 response.StatusCode = 200;
                 response.DisplayMessage = "Success";
                 response.Result = Data;
@@ -435,7 +463,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             try
             {
                 var getQuote = await GetStockQuote(symbol);
-                if(getQuote.StatusCode != 200)
+                if (getQuote.StatusCode != 200)
                 {
                     response.StatusCode = getQuote.StatusCode;
                     response.DisplayMessage = getQuote.DisplayMessage;
@@ -526,7 +554,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     return response;
                 }
 
-                metricFirst.RevenuePerShare = resultRatio[0].RevenuePerShare.ToString(); 
+                metricFirst.RevenuePerShare = resultRatio[0].RevenuePerShare.ToString();
                 metricFirst.PToERatio = resultRatio[0].PriceToEarningsRatio.ToString();
                 metricFirst.PToERatioFive5yrs = resultRatio[4].PriceToEarningsRatio.ToString();
                 metricFirst.PSRatio = resultRatio[0].PriceToSalesRatio.ToString();
@@ -550,26 +578,26 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 metricThird.ReturnOnAsset = result[0].ReturnOnAssets.ToString();
                 metricThird.ReturnOnEquity = result[0].ReturnOnEquity.ToString();
                 metricThird.ReturnOnInvestedCapitalTTM = resultTTM[0].ReturnOnInvestedCapitalTTM.ToString();
-             
+
                 metricThird.ADayHigh = getQuote.Result[0].dayHigh.ToString();
                 metricThird.ADaylow = getQuote.Result[0].dayLow.ToString();
                 metricThird.AYearHigh = getQuote.Result[0].yearHigh.ToString();
                 metricThird.AYearlow = getQuote.Result[0].yearLow.ToString();
-              
-                metricThird.previousClose  = getQuote.Result[0].previousClose.ToString();
+
+                metricThird.previousClose = getQuote.Result[0].previousClose.ToString();
                 metricThird.priceAvg200 = getQuote.Result[0].priceAvg200.ToString();
-         
-           
+
+
                 metricThird.priceAvg50 = getQuote.Result[0].priceAvg50.ToString();
-             
+
 
 
 
 
                 var resultFinal = new FundamentalMetricData();
 
-                resultFinal.metricFirst = metricFirst; 
-                resultFinal.metricSecond = metricSecond; 
+                resultFinal.metricFirst = metricFirst;
+                resultFinal.metricSecond = metricSecond;
                 resultFinal.metricThird = metricThird;
                 response.StatusCode = 200;
                 response.DisplayMessage = "Success";
@@ -590,7 +618,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
         public async Task<ResponseDto<StockAnalyserResponse>> StockAnalyserRequest(string symbol, string period)
         {
             var response = new ResponseDto<StockAnalyserResponse>();
-          
+
             try
             {
                 var getQuote = await GetStockQuote(symbol);
@@ -666,7 +694,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     response.ErrorMessages = new List<string>() { "Stock Income statement is empty" };
                     return response;
                 }
-                
+
                 //year 1
                 var latestPrice = getQuote.Result[0].price;
                 var latestIncomeStatement = resultIncome[0];
@@ -674,14 +702,14 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 var latestCashFlow = resultCash[0];
 
 
-                var  netIncome = latestIncomeStatement.NetIncome;
+                var netIncome = latestIncomeStatement.NetIncome;
                 var revenue = latestIncomeStatement.Revenue;
                 var totalDebt = latestBalanceSheet.TotalDebt;
                 var totalEquity = latestBalanceSheet.TotalEquity;
                 var freeCashFlow = latestCashFlow.FreeCashFlow;
                 var sharesOutstanding = latestIncomeStatement.WeightedAverageShsOut;
 
-                var nopat = netIncome * (1 - 0.21); 
+                var nopat = netIncome * (1 - 0.21);
                 var investedCapital = totalDebt + totalEquity;
 
                 double roic = nopat / investedCapital;
@@ -738,9 +766,9 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 double eps1 = netIncome1 / sharesOutstanding1;
                 double peRatio1 = latestPrice1 / eps1;
 
-              
+
                 var cal1 = (revenue / latestIncomeStatement1.Revenue) - 1;
-                double revenueGrowth1 = cal1  * 100;
+                double revenueGrowth1 = cal1 * 100;
 
 
                 ROIC.Fifth = roic1.ToString();
@@ -776,7 +804,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 double eps2 = netIncome2 / sharesOutstanding2;
                 double peRatio2 = latestPrice2 / eps2;
 
-              
+
                 var cal2 = (revenue / latestIncomeStatement2.Revenue) - 1;
                 double revenueGrowth2 = cal2 * 100;
 
@@ -842,31 +870,31 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 }
 
                 //year 1
-                double AverageDiluted  = 391040000;
+                double AverageDiluted = 391040000;
                 var latestIncomeStatementRevenue = resultIncome[0].Revenue;
 
                 double futureRevLow = latestIncomeStatementRevenue * Math.Pow(1 + (req.RevGrowth.low / 100), req.years);
                 double futureRevMid = latestIncomeStatementRevenue * Math.Pow(1 + (req.RevGrowth.mid / 100), req.years);
                 double futureRevHigh = latestIncomeStatementRevenue * Math.Pow(1 + (req.RevGrowth.High / 100), req.years);
-                
-                
-                double futureNetIcomeLow = futureRevLow * (req.ProfitMargin.low/100);
-                double futureNetIcomeMid = futureRevMid * (req.ProfitMargin.mid/100);
-                double futureNetIcomeHigh = futureRevHigh * (req.ProfitMargin.High/100);
 
-                double futureMarketCapLow = futureNetIcomeLow * (req.PERatio.low/100);
-                double futureMarketCapMid = futureNetIcomeMid * (req.PERatio.mid/100);
-                double futureMarketCapHigh = futureNetIcomeHigh * (req.PERatio.High/100);
+
+                double futureNetIcomeLow = futureRevLow * (req.ProfitMargin.low / 100);
+                double futureNetIcomeMid = futureRevMid * (req.ProfitMargin.mid / 100);
+                double futureNetIcomeHigh = futureRevHigh * (req.ProfitMargin.High / 100);
+
+                double futureMarketCapLow = futureNetIcomeLow * (req.PERatio.low / 100);
+                double futureMarketCapMid = futureNetIcomeMid * (req.PERatio.mid / 100);
+                double futureMarketCapHigh = futureNetIcomeHigh * (req.PERatio.High / 100);
 
 
                 double presentValueMarketCapLow = futureMarketCapLow / Math.Pow(1 + (req.DesiredAnnReturn.low / 100), req.years);
                 double presentValueMarketCapMid = futureMarketCapMid / Math.Pow(1 + (req.DesiredAnnReturn.mid / 100), req.years);
                 double presentValueMarketCapHigh = futureMarketCapHigh / Math.Pow(1 + (req.DesiredAnnReturn.High / 100), req.years);
-               
-                
-                double presentValuePricePerShareLow = presentValueMarketCapLow/AverageDiluted;
-                double presentValuePricePerShareMid = presentValueMarketCapMid/AverageDiluted;
-                double presentValuePricePerShareHigh = presentValueMarketCapHigh/AverageDiluted;
+
+
+                double presentValuePricePerShareLow = presentValueMarketCapLow / AverageDiluted;
+                double presentValuePricePerShareMid = presentValueMarketCapMid / AverageDiluted;
+                double presentValuePricePerShareHigh = presentValueMarketCapHigh / AverageDiluted;
 
                 var DiscountedEarningsValue = new DiscountedEarningsValue()
                 {
@@ -879,8 +907,8 @@ namespace AlpaStock.Infrastructure.Service.Implementation
 
                 double futureFreeCashFlowLow = futureRevLow * (req.FreeCashFlowMargin.low / 100);
                 double futureFreeCashFlowMid = futureRevMid * (req.FreeCashFlowMargin.mid / 100);
-                double futureFreeCashFlowHigh = futureRevHigh * (req.FreeCashFlowMargin.High / 100);  
-                
+                double futureFreeCashFlowHigh = futureRevHigh * (req.FreeCashFlowMargin.High / 100);
+
                 double futureMarketCapCashFlowLow = futureFreeCashFlowLow * (req.PFCF.low / 100);
                 double futurMarketCapCashFlowMid = futureFreeCashFlowMid * (req.PFCF.mid / 100);
                 double futureMarketCapCashFlowHigh = futureFreeCashFlowHigh * (req.PFCF.High / 100);
