@@ -1,4 +1,5 @@
 ﻿using AlpaStock.Core.DTOs.Request.Stock;
+using AlpaStock.Core.DTOs.Response.Stock;
 using AlpaStock.Infrastructure.Service.Interface;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -58,9 +59,53 @@ namespace AlpaStock.Api.Controllers
             }
         
         }
+
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpPut("update-wishlist")]
+        public async Task<IActionResult> UpdateWishListAsync(UpdateStockWishlistReq req)
+        {
+           
+            var result = await _stockService.UpdateStockWishList(req.StockwishlistId, req.LowerLimit, req.UpperLimit);
+
+            if (result.StatusCode == 200 || result.StatusCode == 201)
+            {
+                return Ok(result);
+            }
+            else if (result.StatusCode == 404)
+            {
+                return NotFound(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+        }
+
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpDelete("delete-wishlist")]
+        public async Task<IActionResult> DeleteStockWishListAsync(DeleteStockWishList req)
+        {
+
+            var result = await _stockService.DeleteStockWishList(req.StockwishlistId);
+
+            if (result.StatusCode == 200 || result.StatusCode == 201)
+            {
+                return Ok(result);
+            }
+            else if (result.StatusCode == 404)
+            {
+                return NotFound(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+
+        }
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet("get-wishlist")]
-        public async Task<IActionResult>getWishListAsync()
+        public async Task<IActionResult> GetWishListAsync()
         {
             var userid = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Jti)?.Value;
 

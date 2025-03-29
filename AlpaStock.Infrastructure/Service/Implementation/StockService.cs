@@ -4,6 +4,7 @@ using AlpaStock.Core.DTOs.Response.Stock;
 using AlpaStock.Core.Entities;
 using AlpaStock.Core.Repositories.Interface;
 using AlpaStock.Infrastructure.Service.Interface;
+using CloudinaryDotNet.Actions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -20,12 +21,14 @@ namespace AlpaStock.Infrastructure.Service.Implementation
         private readonly IAlphaRepository<StockWishList> _stockWishRepo;
         public StockService(ILogger<StockService> logger,
             IApiClient apiClient,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IAlphaRepository<StockWishList> stockWishRepo)
         {
             _logger = logger;
             _apiClient = apiClient;
             _configuration = configuration;
             _baseUrl = _configuration["FMP:BASEURL"];
+            _stockWishRepo = stockWishRepo;
         }
         public async Task<ResponseDto<List<StockResp>>> GetStockQuote(string symbol)
         {
@@ -68,9 +71,9 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 return response;
             }
         }
-        public async Task<ResponseDto<IEnumerable<StockInfo>>> GetOtherStockInfo(string symbol)
+        public async Task<ResponseDto<List<StockInfo>>> GetOtherStockInfo(string symbol)
         {
-            var response = new ResponseDto<IEnumerable<StockInfo>>();
+            var response = new ResponseDto<List<StockInfo>>();
             try
             {
 
@@ -86,7 +89,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     response.ErrorMessages = new List<string>() { "Unable to get the stock info" };
                     return response;
                 }
-                var result = JsonConvert.DeserializeObject<IEnumerable<StockInfo>>(makeRequest.Content);
+                var result = JsonConvert.DeserializeObject<List<StockInfo>>(makeRequest.Content);
                 if (!result.Any())
                 {
                     response.StatusCode = 400;
@@ -282,7 +285,15 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             var response = new ResponseDto<string>();
             try
             {
-
+                var check = await _stockWishRepo.GetQueryable().FirstOrDefaultAsync(u=>u.UserId == userid && 
+                u.StockSymbols.ToLower() == stockSymbol.ToLower());
+                if(check != null)
+                {
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Stock already added to wishlist" };
+                    response.StatusCode = 400;
+                    return response;
+                }
                 var result = await _stockWishRepo.Add(new StockWishList()
                 {
                     UserId = userid,
@@ -306,19 +317,101 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 return response;
             }
         }
-
-        public async Task<ResponseDto<IEnumerable<StockWishList>>> GetUserStockWishList(string userid)
+        public async Task<ResponseDto<string>> UpdateStockWishList( string stockwishlistId, decimal lowerLimit, decimal upperLimit)
         {
-            var response = new ResponseDto<IEnumerable<StockWishList>>();
+            var response = new ResponseDto<string>();
+            try
+            {
+                var retrieve = await _stockWishRepo.GetQueryable().FirstOrDefaultAsync(u => u.Id == stockwishlistId);
+                if(retrieve == null)
+                {
+
+                    response.StatusCode = 404;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Stock wishlist is available" };
+                    return response;
+                }
+                retrieve.LowerLimit = lowerLimit;
+                retrieve.UpperLimit = upperLimit;
+                _stockWishRepo.Update(retrieve);
+
+                await _stockWishRepo.SaveChanges();
+                response.StatusCode = 200;
+                response.DisplayMessage = "Success";
+                response.Result = "Stock wishlist updated successfully";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+                response.DisplayMessage = "Error";
+                response.ErrorMessages = new List<string>() { "Update Stock wishlist service not available" };
+                response.StatusCode = 400;
+                return response;
+            }
+        }  
+        public async Task<ResponseDto<string>> DeleteStockWishList(string stockwishlistId)
+        {
+            var response = new ResponseDto<string>();
+            try
+            {
+                var retrieve = await _stockWishRepo.GetQueryable().FirstOrDefaultAsync(u => u.Id == stockwishlistId);
+                if(retrieve == null)
+                {
+
+                    response.StatusCode = 404;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Stock wishlist is available" };
+                    return response;
+                }
+                
+                _stockWishRepo.Delete(retrieve);
+
+                await _stockWishRepo.SaveChanges();
+                response.StatusCode = 200;
+                response.DisplayMessage = "Success";
+                response.Result = "Stock wishlist deleted successfully";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+                response.DisplayMessage = "Error";
+                response.ErrorMessages = new List<string>() { "Delete stock wishlist service not available" };
+                response.StatusCode = 400;
+                return response;
+            }
+        }
+
+        public async Task<ResponseDto<IEnumerable<StockWishListResp>>> GetUserStockWishList(string userid)
+        {
+            var response = new ResponseDto<IEnumerable<StockWishListResp>>();
             try
             {
 
                 var result = await _stockWishRepo.GetQueryable().Where(u=>u.UserId == userid).ToListAsync();
+                var Data = new List<StockWishListResp>();
+                foreach (var item in result)
+                {
+                    var getQuote = await GetOtherStockInfo(item.StockSymbols);
+                    if (getQuote.StatusCode == 200)
+                    {
+                        Data.Add(new StockWishListResp()
+                        {
+                            LowerLimit = item.LowerLimit,
+                            UpperLimit = item.UpperLimit,
+                            StockSymbols = item.StockSymbols,
+                            Id = item.Id,
+                            Price = getQuote.Result[0].Price,
+                            ImgUrl = getQuote.Result[0]?.Image,
 
-                ;
+                        });
+                    }
+                }
+               
                 response.StatusCode = 200;
                 response.DisplayMessage = "Success";
-                response.Result = result;
+                response.Result = Data;
                 return response;
             }
             catch (Exception ex)
