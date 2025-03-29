@@ -16,7 +16,7 @@ namespace AlpaStock.Core.DTOs.Response.Stock
         public DateTime AcceptedDate { get; set; }
         public string FiscalYear { get; set; }
         public string Period { get; set; }
-        public long Revenue { get; set; }
+        public double Revenue { get; set; }
         public long CostOfRevenue { get; set; }
         public long GrossProfit { get; set; }
         public long ResearchAndDevelopmentExpenses { get; set; }
@@ -40,12 +40,12 @@ namespace AlpaStock.Core.DTOs.Response.Stock
         public long NetIncomeFromContinuingOperations { get; set; }
         public long NetIncomeFromDiscontinuedOperations { get; set; }
         public long OtherAdjustmentsToNetIncome { get; set; }
-        public long NetIncome { get; set; }
+        public double NetIncome { get; set; }
         public long NetIncomeDeductions { get; set; }
         public long BottomLineNetIncome { get; set; }
         public double Eps { get; set; }
         public double EpsDiluted { get; set; }
-        public long WeightedAverageShsOut { get; set; }
+        public double WeightedAverageShsOut { get; set; }
         public long WeightedAverageShsOutDil { get; set; }
     }
 }

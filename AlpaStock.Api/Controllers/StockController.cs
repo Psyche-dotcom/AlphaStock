@@ -172,11 +172,49 @@ namespace AlpaStock.Api.Controllers
                 return BadRequest(result);
             }
         }
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+      //  [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet("fundamental-metric")]
         public async Task<IActionResult> FundamentalMetricDatas(string symbol, string period)
         {
             var result = await _stockService.Metrics(symbol, period);
+
+            if (result.StatusCode == 200 || result.StatusCode == 201)
+            {
+                return Ok(result);
+            }
+            else if (result.StatusCode == 404)
+            {
+                return NotFound(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+        } 
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpGet("stock-analyer-stats")]
+        public async Task<IActionResult> StockAnalyzerStats(string symbol, string period)
+        {
+            var result = await _stockService.StockAnalyserRequest(symbol, period);
+
+            if (result.StatusCode == 200 || result.StatusCode == 201)
+            {
+                return Ok(result);
+            }
+            else if (result.StatusCode == 404)
+            {
+                return NotFound(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+        }  
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpPost("stock-analyer-stats/predict")]
+        public async Task<IActionResult> StockAnalyzerStatsPredict(StockAnalyserRequest request)
+        {
+            var result = await _stockService.StockAnalyserResponse(request);
 
             if (result.StatusCode == 200 || result.StatusCode == 201)
             {

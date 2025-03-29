@@ -62,11 +62,11 @@ namespace AlpaStock.Core.DTOs.Response.Stock
         public long AccumulatedOtherComprehensiveIncomeLoss { get; set; }
         public long OtherTotalStockholdersEquity { get; set; }
         public long TotalStockholdersEquity { get; set; }
-        public long TotalEquity { get; set; }
+        public double TotalEquity { get; set; }
         public long MinorityInterest { get; set; }
         public long TotalLiabilitiesAndTotalEquity { get; set; }
         public long TotalInvestments { get; set; }
-        public long TotalDebt { get; set; }
+        public double TotalDebt { get; set; }
         public long NetDebt { get; set; }
 
     }

@@ -48,7 +48,7 @@
         public long CashAtBeginningOfPeriod { get; set; }
         public long OperatingCashFlow { get; set; }
         public long CapitalExpenditure { get; set; }
-        public long FreeCashFlow { get; set; }
+        public double FreeCashFlow { get; set; }
         public long IncomeTaxesPaid { get; set; }
         public long InterestPaid { get; set; }
     }
