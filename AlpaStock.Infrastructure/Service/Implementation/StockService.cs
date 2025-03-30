@@ -848,7 +848,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
 
             try
             {
-                var apiUrlIcome = _baseUrl + $"stable/income-statement?symbol={req.symbol} &period=annual&limit=1";
+                var apiUrlIcome = _baseUrl + $"stable/income-statement?symbol={req.symbol}&period=annual&limit=1";
                 var makeRequestIncome = await _apiClient.GetAsync<string>(apiUrlIcome);
                 if (!makeRequestIncome.IsSuccessful)
                 {
@@ -870,7 +870,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 }
 
                 //year 1
-                double AverageDiluted = 391040000;
+                double AverageDiluted = 15254000;
                 var latestIncomeStatementRevenue = resultIncome[0].Revenue;
 
                 double futureRevLow = latestIncomeStatementRevenue * Math.Pow(1 + (req.RevGrowth.low / 100), req.years);

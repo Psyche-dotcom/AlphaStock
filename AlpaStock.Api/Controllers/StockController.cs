@@ -295,6 +295,27 @@ namespace AlpaStock.Api.Controllers
                 return BadRequest(result);
             }
         }
+        
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpPost("stock-analyer-stats/predict/hisory")]
+        public async Task<IActionResult> StockAnalyzerStatsPredictHistory(StockAnalysisHisotry request)
+        {
+            return Ok();
+           /* var result = await _stockService.StockAnalyserResponse(request);
+
+            if (result.StatusCode == 200 || result.StatusCode == 201)
+            {
+                return Ok(result);
+            }
+            else if (result.StatusCode == 404)
+            {
+                return NotFound(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }*/
+        }
     }
 
 }
