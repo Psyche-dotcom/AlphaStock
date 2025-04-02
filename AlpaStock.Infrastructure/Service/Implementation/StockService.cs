@@ -271,8 +271,51 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             }
             catch (Exception ex)
             {
-                _logger.LogError($"cash-flow-statement ex - {ex.Message}", ex);
+                _logger.LogError($"historical-price-eod ex - {ex.Message}", ex);
                 response.ErrorMessages = new List<string> { "Unable to get the stock historical-price-eod at the moment" };
+                response.StatusCode = 500;
+                response.DisplayMessage = "Error";
+                return response;
+            }
+        }
+
+
+        public async Task<ResponseDto<IEnumerable<StockSearchResp>>> SearchStock(string symbol)
+        {
+            var response = new ResponseDto<IEnumerable<StockSearchResp>>();
+            try
+            {
+
+                var apiUrl = _baseUrl + $"stable/search-symbol?query={symbol}&limit=20";
+                var makeRequest = await _apiClient.GetAsync<string>(apiUrl);
+                if (!makeRequest.IsSuccessful)
+                {
+                    _logger.LogError("search stock error mess", makeRequest.ErrorMessage);
+                    _logger.LogError("search stock error ex", makeRequest.ErrorException);
+                    _logger.LogError("search stock error con", makeRequest.Content);
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Unable to get the search stock" };
+                    return response;
+                }
+                var result = JsonConvert.DeserializeObject<IEnumerable<StockSearchResp>>(makeRequest.Content);
+                if (!result.Any())
+                {
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "search stock is empty" };
+                    return response;
+                }
+                response.StatusCode = 200;
+                response.DisplayMessage = "Success";
+                response.Result = result;
+                return response;
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"search stock ex - {ex.Message}", ex);
+                response.ErrorMessages = new List<string> { "Unable to get the search stock at the moment" };
                 response.StatusCode = 500;
                 response.DisplayMessage = "Error";
                 return response;
@@ -869,8 +912,8 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     return response;
                 }
 
-                //year 1
-                double AverageDiluted = 15254000;
+               
+                double AverageDiluted = resultIncome[0].WeightedAverageShsOutDil;
                 var latestIncomeStatementRevenue = resultIncome[0].Revenue;
 
                 double futureRevLow = latestIncomeStatementRevenue * Math.Pow(1 + (req.RevGrowth.low / 100), req.years);

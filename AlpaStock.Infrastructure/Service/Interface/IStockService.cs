@@ -7,6 +7,7 @@ namespace AlpaStock.Infrastructure.Service.Interface
 {
     public interface IStockService
     {
+        Task<ResponseDto<IEnumerable<StockSearchResp>>> SearchStock(string symbol);
         Task<ResponseDto<StockAnalyserResponse>> StockAnalyserRequest(string symbol, string period);
         Task<ResponseDto<FundamentalMetricData>> Metrics(string symbol, string period);
         Task<ResponseDto<IEnumerable<StockDataHistoryData>>> HistoryCalPriceEOD(string symbol, string startdate, string enddate);

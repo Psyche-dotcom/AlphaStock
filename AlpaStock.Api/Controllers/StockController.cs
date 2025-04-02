@@ -162,6 +162,24 @@ namespace AlpaStock.Api.Controllers
             {
                 return BadRequest(result);
             }
+        } 
+        [HttpGet("search")]
+        public async Task<IActionResult> SearchStockAsync(string symbol)
+        {
+            var result = await _stockService.SearchStock(symbol);
+
+            if (result.StatusCode == 200 || result.StatusCode == 201)
+            {
+                return Ok(result);
+            }
+            else if (result.StatusCode == 404)
+            {
+                return NotFound(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
         }
         [HttpGet("historical/eod")]
         public async Task<IActionResult> GetSockEod(string symbol, string startDate, string endDate)
