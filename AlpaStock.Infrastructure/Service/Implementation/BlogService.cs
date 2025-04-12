@@ -385,7 +385,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     return response;
                 }
                 result.Content = req.Content;
-                result.BlogThumbnailUrl = req.Content;
+                result.BlogThumbnailUrl = req.BlogThumbnailUrl;
                 result.Category= req.Category;
                 result.Title = req.Title;
                    
