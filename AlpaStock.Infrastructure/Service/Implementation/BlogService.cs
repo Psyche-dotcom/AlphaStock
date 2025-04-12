@@ -333,7 +333,81 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 response.StatusCode = 500;
                 return response;
             }
+        } 
+        public async Task<ResponseDto<string>> DeleteBlogPost(string BlogPostId)
+        {
+            var response = new ResponseDto<string>();
+            try
+            {
+                var result = await _blogPostRepo.GetQueryable()
+                    .FirstOrDefaultAsync(p => p.Id == BlogPostId);
+
+               
+                if (result == null)
+                {
+                    response.StatusCode = 404;
+                    response.DisplayMessage = "Not Found";
+                    response.ErrorMessages = new List<string> { "Blog post not found" };
+                    return response;
+                }
+                _blogPostRepo.Delete(result);
+                await _blogPostRepo.SaveChanges();
+
+                response.StatusCode = 200;
+                response.DisplayMessage = "Success";
+                response.Result = "Blog Post Delete success fully";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error Delete blog post");
+                response.DisplayMessage = "Error";
+                response.ErrorMessages = new List<string> { "Cannot Delete blog post at the moment" };
+                response.StatusCode = 500;
+                return response;
+            }
         }
+
+        public async Task<ResponseDto<string>> UpdateBlogPost(string BlogPostId, AddContentReq req)
+        {
+            var response = new ResponseDto<string>();
+            try
+            {
+                var result = await _blogPostRepo.GetQueryable()
+                    .FirstOrDefaultAsync(p => p.Id == BlogPostId);
+
+
+                if (result == null)
+                {
+                    response.StatusCode = 404;
+                    response.DisplayMessage = "Not Found";
+                    response.ErrorMessages = new List<string> { "Blog post not found" };
+                    return response;
+                }
+                result.Content = req.Content;
+                result.BlogThumbnailUrl = req.Content;
+                result.Category= req.Category;
+                result.Title = req.Title;
+                   
+                _blogPostRepo.Update(result);
+                await _blogPostRepo.SaveChanges();
+
+                response.StatusCode = 200;
+                response.DisplayMessage = "Success";
+                response.Result = "Blog Post Updated success fully";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error Updated blog post");
+                response.DisplayMessage = "Error";
+                response.ErrorMessages = new List<string> { "Cannot Updated blog post at the moment" };
+                response.StatusCode = 500;
+                return response;
+            }
+        }
+
+
         public async Task<ResponseDto<PaginatedGenericDto<IEnumerable<AllCommentonBlogPost>>>> RetrieveSingleBlogPostComent(int pageNumber, int perPageSize, string BlogPostId, string userId)
         {
             pageNumber = Math.Max(pageNumber, 1);

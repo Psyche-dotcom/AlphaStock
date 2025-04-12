@@ -41,6 +41,48 @@ namespace AlpaStock.Api.Controllers
             }
         }
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpPut("update/{id}")]
+        public async Task<IActionResult> updateBlogPost(AddContentReq req, string id)
+        {
+
+
+            var result = await _blogService.UpdateBlogPost(id, req);
+
+            if (result.StatusCode == 200 || result.StatusCode == 201)
+            {
+                return Ok(result);
+            }
+            else if (result.StatusCode == 404)
+            {
+                return NotFound(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+        }
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpDelete("delete/{id}")]
+        public async Task<IActionResult> DeleteBlogPost(string id)
+        {
+
+
+            var result = await _blogService.DeleteBlogPost(id);
+
+            if (result.StatusCode == 200 || result.StatusCode == 201)
+            {
+                return Ok(result);
+            }
+            else if (result.StatusCode == 404)
+            {
+                return NotFound(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+        }
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpPost("like_unlike")]
         public async Task<IActionResult> LikeAndUnlikePost(LikeBlogReq req)
         {
@@ -107,13 +149,13 @@ namespace AlpaStock.Api.Controllers
             {
                 return BadRequest(result);
             }
-        } 
+        }
 
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpPut("admin/update/blogstatus")]
         public async Task<IActionResult> UpdateBlogStatus(UpdateBlogStatusReq req)
         {
-         
+
             var result = await _blogService.UpdateBlogStatus(req.BlogPostId, req.Status);
 
             if (result.StatusCode == 200 || result.StatusCode == 201)
@@ -212,12 +254,12 @@ namespace AlpaStock.Api.Controllers
             {
                 return BadRequest(result);
             }
-        } 
+        }
         [AllowAnonymous]
         [HttpPost("comment/retrieve/all")]
-        public async Task<IActionResult> RetrieveAllPostComment (BlogPostCommentReq req)
+        public async Task<IActionResult> RetrieveAllPostComment(BlogPostCommentReq req)
         {
-            var result = await _blogService.RetrieveSingleBlogPostComent(req.pageNumber, req.perPageSize,req.BlogPostId, req.UserId);
+            var result = await _blogService.RetrieveSingleBlogPostComent(req.pageNumber, req.perPageSize, req.BlogPostId, req.UserId);
 
             if (result.StatusCode == 200 || result.StatusCode == 201)
             {
@@ -236,7 +278,7 @@ namespace AlpaStock.Api.Controllers
         [HttpPost("comment/reply/retrieve/all")]
         public async Task<IActionResult> RetrieveSingleBlogPostComentReplyAsync(RetrieveAllCommentReply req)
         {
-            var result = await _blogService.RetrieveSingleBlogPostComentReply(req.pageNumber, req.perPageSize, req.CommentId );
+            var result = await _blogService.RetrieveSingleBlogPostComentReply(req.pageNumber, req.perPageSize, req.CommentId);
 
             if (result.StatusCode == 200 || result.StatusCode == 201)
             {

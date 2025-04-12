@@ -5,5 +5,6 @@
         Decline,
         Archived,
         Published,
+        Pending
     }
 }

@@ -9,6 +9,8 @@ namespace AlpaStock.Infrastructure.Service.Interface
 {
     public interface IBlogService
     {
+        Task<ResponseDto<string>> DeleteBlogPost(string BlogPostId);
+        Task<ResponseDto<string>> UpdateBlogPost(string BlogPostId, AddContentReq req);
         Task<ResponseDto<string>> CreateBlogReq(AddContentReq req, string userid);
         Task<ResponseDto<string>> BlogLikeAndUnlike(LikeBlogReq req, string userid);
         Task<ResponseDto<Comment>> BlogComment(AddComment req, string userid);
