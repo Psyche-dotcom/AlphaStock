@@ -44,8 +44,6 @@ namespace AlpaStock.Api.Controllers
         [HttpPut("update/{id}")]
         public async Task<IActionResult> updateBlogPost(AddContentReq req, string id)
         {
-
-
             var result = await _blogService.UpdateBlogPost(id, req);
 
             if (result.StatusCode == 200 || result.StatusCode == 201)
@@ -65,8 +63,6 @@ namespace AlpaStock.Api.Controllers
         [HttpDelete("delete/{id}")]
         public async Task<IActionResult> DeleteBlogPost(string id)
         {
-
-
             var result = await _blogService.DeleteBlogPost(id);
 
             if (result.StatusCode == 200 || result.StatusCode == 201)
