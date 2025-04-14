@@ -360,9 +360,9 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             }
         }
 
-        public async Task<ResponseDto<bool>> IsAddStockWishList(string userid, string stockSymbol)
+        public async Task<ResponseDto<StockWishListResponseIsadded>> IsAddStockWishList(string userid, string stockSymbol)
         {
-            var response = new ResponseDto<bool>();
+            var response = new ResponseDto<StockWishListResponseIsadded>();
             try
             {
                 var check = await _stockWishRepo.GetQueryable().FirstOrDefaultAsync(u => u.UserId == userid &&
@@ -371,12 +371,19 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 {
                     response.StatusCode = 200;
                     response.DisplayMessage = "Success";
-                    response.Result = true;
+                    response.Result = new StockWishListResponseIsadded()
+                    {
+                        IsAdded = true,
+                        WishListId = check.Id
+                    };
                     return response;
                 }
                 response.StatusCode = 200;
                 response.DisplayMessage = "Success";
-                response.Result = false;
+                response.Result = new StockWishListResponseIsadded()
+                {
+                    IsAdded = false,
+                };
                 return response;
             }
             catch (Exception ex)
