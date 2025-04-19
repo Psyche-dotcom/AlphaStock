@@ -7,7 +7,7 @@
         public decimal Open { get; set; }
         public decimal High { get; set; }
         public decimal Low { get; set; }
-        public decimal Close { get; set; }
+        public double Close { get; set; }
         public long Volume { get; set; }
         public decimal Change { get; set; }
         public decimal ChangePercent { get; set; }

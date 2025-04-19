@@ -236,9 +236,9 @@ namespace AlpaStock.Infrastructure.Service.Implementation
         }
 
 
-        public async Task<ResponseDto<IEnumerable<StockDataHistoryData>>> HistoryCalPriceEOD(string symbol, string startdate, string enddate)
+        public async Task<ResponseDto<List<StockDataHistoryData>>> HistoryCalPriceEOD(string symbol, string startdate, string enddate)
         {
-            var response = new ResponseDto<IEnumerable<StockDataHistoryData>>();
+            var response = new ResponseDto<List<StockDataHistoryData>>();
             try
             {
 
@@ -255,7 +255,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     response.ErrorMessages = new List<string>() { "Unable to get the stock historical-price-eod statement" };
                     return response;
                 }
-                var result = JsonConvert.DeserializeObject<IEnumerable<StockDataHistoryData>>(makeRequest.Content);
+                var result = JsonConvert.DeserializeObject<List<StockDataHistoryData>>(makeRequest.Content);
                 if (!result.Any())
                 {
                     response.StatusCode = 400;
@@ -745,35 +745,40 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     return response;
                 }
 
-                //year 1
+            
                 var latestPrice = getQuote.Result[0].price;
                 var latestIncomeStatement = resultIncome[0];
                 var latestBalanceSheet = resultBalance[0];
                 var latestCashFlow = resultCash[0];
 
 
+
                 var netIncome = latestIncomeStatement.NetIncome;
                 var revenue = latestIncomeStatement.Revenue;
-                var totalDebt = latestBalanceSheet.TotalDebt;
-                var totalEquity = latestBalanceSheet.TotalEquity;
-                var freeCashFlow = latestCashFlow.FreeCashFlow;
-                var sharesOutstanding = latestIncomeStatement.WeightedAverageShsOut;
 
-                var nopat = netIncome * (1 - 0.21);
-                var investedCapital = totalDebt + totalEquity;
 
-                double roic = nopat / investedCapital;
-                double profitMargin = netIncome / revenue;
-                double freeCashFlowMargin = freeCashFlow / revenue;
-                double freeCashFlowPerShare = freeCashFlow / sharesOutstanding;
-                double pfcf = latestPrice / freeCashFlowPerShare;
 
-                double eps = netIncome / sharesOutstanding;
-                double peRatio = latestPrice / eps;
+                var fcfMargins = new List<double>();
+                var roics = new List<double>();
 
-                var sub = latestIncomeStatement.Revenue - 1;
-                var cal = revenue / sub;
-                double revenueGrowth = cal * 100;
+                for (int i = 0; i < resultIncome.Count && i < 10; i++)
+                {
+                    var fcf = CalculateFCF((long)resultCash[i].OperatingCashFlow, (long)resultCash[i].CapitalExpenditure);
+                    var fcfMargin = CalculateFCFMargin(fcf, (double)resultIncome[i].Revenue);
+                    var roic = CalculateROIC((double)resultIncome[i].NetIncome, (double)resultBalance[i].TotalDebt, (double)resultBalance[i].CashAndCashEquivalents, (double)resultBalance[i].TotalEquity);
+
+                    fcfMargins.Add(fcfMargin);
+                    roics.Add(roic);
+                }
+
+                var pe = CalculatePE(getQuote.Result[0].marketCap, (double)resultIncome[0].NetIncome);
+                var pfcf = CalculatePFCF(getQuote.Result[0].marketCap, CalculateFCF((long)resultCash[0].OperatingCashFlow, (long)resultCash[0].CapitalExpenditure));
+
+
+
+
+                double profitMargin = (double)(netIncome / revenue);
+                double revenueGrowth = CalculateYoYGrowth((double)resultIncome[0].Revenue, (double)resultIncome[1].Revenue);
 
                 var ROIC = new ROIC();
                 var RevenueGrowth = new RevenueGrowth();
@@ -782,12 +787,12 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 var PERatio = new PERatio();
                 var PFCF = new PFCF();
 
-                ROIC.First = roic.ToString();
-                RevenueGrowth.First = revenueGrowth.ToString();
-                ProfitMargin.First = profitMargin.ToString();
-                FreeCashFlowMargin.First = freeCashFlowMargin.ToString();
-                PERatio.First = peRatio.ToString();
-                PFCF.First = pfcf.ToString();
+                ROIC.First = $"{roics[0]:F2}%";
+                RevenueGrowth.First = revenueGrowth.ToString() +"%";
+                ProfitMargin.First = (profitMargin * 100).ToString() + "%";
+                FreeCashFlowMargin.First = $"{fcfMargins[0]:F2}%";
+                PERatio.First = $"{pe:F2}";
+                PFCF.First = $"{pfcf:F2}";
 
 
 
@@ -799,34 +804,18 @@ namespace AlpaStock.Infrastructure.Service.Implementation
 
                 var netIncome1 = latestIncomeStatement1.NetIncome;
                 var revenue1 = latestIncomeStatement1.Revenue;
-                var totalDebt1 = latestBalanceSheet1.TotalDebt;
-                var totalEquity1 = latestBalanceSheet1.TotalEquity;
-                var freeCashFlow1 = latestCashFlow1.FreeCashFlow;
-                var sharesOutstanding1 = latestIncomeStatement1.WeightedAverageShsOut;
+                
 
-                var nopat1 = netIncome1 * (1 - 0.21);
-                var investedCapital1 = totalDebt1 + totalEquity1;
-
-                double roic1 = nopat1 / investedCapital1;
-                double profitMargin1 = netIncome1 / revenue1;
-                double freeCashFlowMargin1 = freeCashFlow1 / revenue1;
-                double freeCashFlowPerShare1 = freeCashFlow1 / sharesOutstanding1;
-                double pfcf1 = latestPrice1 / freeCashFlowPerShare1;
-
-                double eps1 = netIncome1 / sharesOutstanding1;
-                double peRatio1 = latestPrice1 / eps1;
+                
+                double profitMargin1 = (double)(netIncome1 / revenue1);
+                double revenueGrowth1 = CalculateCAGR((double)resultIncome[0].Revenue, (double)resultIncome[4].Revenue, 5);
 
 
-                var cal1 = (revenue / latestIncomeStatement1.Revenue) - 1;
-                double revenueGrowth1 = cal1 * 100;
-
-
-                ROIC.Fifth = roic1.ToString();
+                ROIC.Fifth = $"{roics.Take(5).Average():F2}%";
                 RevenueGrowth.Fifth = revenueGrowth1.ToString();
-                ProfitMargin.Fifth = profitMargin1.ToString();
-                FreeCashFlowMargin.Fifth = freeCashFlowMargin1.ToString();
-                PERatio.Fifth = peRatio1.ToString();
-                PFCF.Fifth = pfcf1.ToString();
+                ProfitMargin.Fifth = (profitMargin1 * 100).ToString();
+                FreeCashFlowMargin.Fifth = $"{fcfMargins.Take(5).Average():F2}%";
+              
 
 
                 var latestPrice2 = getQuote.Result[0].price;
@@ -837,34 +826,17 @@ namespace AlpaStock.Infrastructure.Service.Implementation
 
                 var netIncome2 = latestIncomeStatement2.NetIncome;
                 var revenue2 = latestIncomeStatement2.Revenue;
-                var totalDebt2 = latestBalanceSheet2.TotalDebt;
-                var totalEquity2 = latestBalanceSheet2.TotalEquity;
-                var freeCashFlow2 = latestCashFlow2.FreeCashFlow;
-                var sharesOutstanding2 = latestIncomeStatement2.WeightedAverageShsOut;
-
-                var nopat2 = netIncome2 * (1 - 0.21);
-                var investedCapital2 = totalDebt2 + totalEquity2;
-
-                double roic2 = nopat2 / investedCapital2;
-                double profitMargin2 = netIncome2 / revenue2;
-                double freeCashFlowMargin2 = freeCashFlow2 / revenue2;
-                double freeCashFlowPerShare2 = freeCashFlow2 / sharesOutstanding2;
-                double pfcf2 = latestPrice2 / freeCashFlowPerShare2;
-
-                double eps2 = netIncome2 / sharesOutstanding2;
-                double peRatio2 = latestPrice2 / eps2;
+               
+                
+                double profitMargin2 = (double)(netIncome2 / revenue2);
+                double revenueGrowth2 = CalculateCAGR((double)resultIncome[0].Revenue, (double)resultIncome[9].Revenue, 10);
 
 
-                var cal2 = (revenue / latestIncomeStatement2.Revenue) - 1;
-                double revenueGrowth2 = cal2 * 100;
-
-
-                ROIC.Ten = roic2.ToString();
+                ROIC.Ten = $"{roics.Take(10).Average():F2}%";
                 RevenueGrowth.Ten = revenueGrowth2.ToString();
-                ProfitMargin.Ten = profitMargin2.ToString();
-                FreeCashFlowMargin.Ten = freeCashFlowMargin2.ToString();
-                PERatio.Ten = peRatio2.ToString();
-                PFCF.Ten = pfcf2.ToString();
+                ProfitMargin.Ten = (profitMargin2 * 100).ToString();
+                FreeCashFlowMargin.Ten = $"{fcfMargins.Take(10).Average():F2}%";
+                
 
                 response.StatusCode = 200;
                 response.DisplayMessage = "Success";
@@ -889,6 +861,32 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 return response;
             }
         }
+        private double CalculateYoYGrowth(double current, double previous)
+        {
+            return ((double)(current - previous) / previous) * 100;
+        }
+
+        private double CalculateCAGR(double endValue, double startValue, int years)
+        {
+            return (Math.Pow((double)endValue / startValue, 1.0 / years) - 1) * 100;
+        }
+        public double CalculateFCF(long operatingCashFlow, long capex)
+    => operatingCashFlow - Math.Abs(capex); // CapEx is negative in FMP data
+
+        public double CalculateFCFMargin(double fcf, double revenue)
+            => (double)fcf / revenue * 100;
+
+        public double CalculateROIC(double netIncome, double totalDebt, double cash, double equity)
+        {
+            var investedCapital = totalDebt + equity - cash;
+            return (double)netIncome / investedCapital * 100;
+        }
+
+        public double CalculatePE(double marketCap, double netIncome)
+            => marketCap / netIncome;
+
+        public double CalculatePFCF(double marketCap, double fcf)
+            => marketCap / fcf;
 
 
 
@@ -919,13 +917,13 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     return response;
                 }
 
-               
-                double AverageDiluted = resultIncome[0].WeightedAverageShsOutDil;
+
+                double AverageDiluted = (double)resultIncome[0].WeightedAverageShsOutDil;
                 var latestIncomeStatementRevenue = resultIncome[0].Revenue;
 
-                double futureRevLow = latestIncomeStatementRevenue * Math.Pow(1 + (req.RevGrowth.low / 100), req.years);
-                double futureRevMid = latestIncomeStatementRevenue * Math.Pow(1 + (req.RevGrowth.mid / 100), req.years);
-                double futureRevHigh = latestIncomeStatementRevenue * Math.Pow(1 + (req.RevGrowth.High / 100), req.years);
+                double futureRevLow = (double)(latestIncomeStatementRevenue * Math.Pow(1 + (req.RevGrowth.low / 100), req.years));
+                double futureRevMid = (double)(latestIncomeStatementRevenue * Math.Pow(1 + (req.RevGrowth.mid / 100), req.years));
+                double futureRevHigh = (double)(latestIncomeStatementRevenue * Math.Pow(1 + (req.RevGrowth.High / 100), req.years));
 
 
                 double futureNetIcomeLow = futureRevLow * (req.ProfitMargin.low / 100);

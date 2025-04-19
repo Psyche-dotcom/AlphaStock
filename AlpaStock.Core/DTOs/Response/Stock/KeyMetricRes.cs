@@ -20,7 +20,7 @@
         public double InterestBurden { get; set; }
         public long WorkingCapital { get; set; }
         public long InvestedCapital { get; set; }
-        public double ReturnOnAssets { get; set; }
+        public string ReturnOnAssets { get; set; }
         public double OperatingReturnOnAssets { get; set; }
         public double ReturnOnTangibleAssets { get; set; }
         public double ReturnOnEquity { get; set; }

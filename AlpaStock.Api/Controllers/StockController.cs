@@ -275,7 +275,7 @@ namespace AlpaStock.Api.Controllers
                 return BadRequest(result);
             }
         } 
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+       // [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet("stock-analyer-stats")]
         public async Task<IActionResult> StockAnalyzerStats(string symbol, string period)
         {

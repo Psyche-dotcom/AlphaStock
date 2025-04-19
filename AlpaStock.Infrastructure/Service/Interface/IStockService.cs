@@ -10,7 +10,7 @@ namespace AlpaStock.Infrastructure.Service.Interface
         Task<ResponseDto<IEnumerable<StockSearchResp>>> SearchStock(string symbol);
         Task<ResponseDto<StockAnalyserResponse>> StockAnalyserRequest(string symbol, string period);
         Task<ResponseDto<FundamentalMetricData>> Metrics(string symbol, string period);
-        Task<ResponseDto<IEnumerable<StockDataHistoryData>>> HistoryCalPriceEOD(string symbol, string startdate, string enddate);
+        Task<ResponseDto<List<StockDataHistoryData>>> HistoryCalPriceEOD(string symbol, string startdate, string enddate);
         Task<ResponseDto<IEnumerable<StockWishListResp>>> GetUserStockWishList(string userid);
         Task<ResponseDto<string>> AddStockWishList(string userid, string stockSymbol, decimal lowerLimit, decimal upperLimit);
         Task<ResponseDto<List<StockResp>>> GetStockQuote(string symbol);
