@@ -184,7 +184,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     return response;
                 }
 
-                var result = await _communityChannelRepo.GetQueryable()
+                var result = await _communityChannelRepo.GetQueryable().Include(u=>u.Category)
                  .ToListAsync();
                 response.StatusCode = 200;
                 response.DisplayMessage = "Success";
