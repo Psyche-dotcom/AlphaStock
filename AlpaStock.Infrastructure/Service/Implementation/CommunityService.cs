@@ -151,7 +151,8 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             var response = new ResponseDto<IEnumerable<ChannelCategory>>();
             try
             {
-                var RetrieveCat = await _channelCategoryRepo.GetQueryable().ToListAsync();
+                var RetrieveCat = await _channelCategoryRepo.GetQueryable().Include(u=>u.CommunityChannels)
+                    .ToListAsync();
 
                 response.Result = RetrieveCat;
                 response.StatusCode = 200;
