@@ -1,4 +1,5 @@
 ﻿using AlpaStock.Core.DTOs;
+using AlpaStock.Core.DTOs.Response.Community;
 using AlpaStock.Core.Entities;
 using AlpaStock.Core.Repositories.Interface;
 using AlpaStock.Infrastructure.Service.Interface;
@@ -170,6 +171,46 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             }
         }
 
+       
+        public async Task<ResponseDto<IEnumerable<ChannelRepDto>>> RetrieveCommunityCategory(string currentUserId)
+        {
+            var response = new ResponseDto<IEnumerable<ChannelRepDto>>();
+            try
+            {
+                var categories = await _channelCategoryRepo.GetQueryable()
+                    .Include(c => c.CommunityChannels)
+                        .ThenInclude(ch => ch.CommunityChannelMessages)
+                            .ThenInclude(m => m.MessageReads)
+                    .ToListAsync();
+
+                var result = categories.Select(category => new ChannelRepDto
+                {
+                    CategoryId = category.Id,
+                    CategoryName = category.Name,
+                    Channels = category.CommunityChannels.Select(channel => new ChannelDto
+                    {
+                        Id = channel.Id,
+                        Name = channel.Name,
+                        ChannelRoomName= channel.ChannelRoomId,
+                        UnreadCount = channel.CommunityChannelMessages
+                            .Count(msg => !msg.MessageReads.Any(read => read.UserId == currentUserId))
+                    }).ToList()
+                });
+
+                response.Result = result;
+                response.StatusCode = 200;
+                response.DisplayMessage = "Success";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+                response.DisplayMessage = "Error";
+                response.ErrorMessages = new List<string> { "Channel category not retrieved successfully" };
+                response.StatusCode = 400;
+                return response;
+            }
+        }
         public async Task<ResponseDto<IEnumerable<CommunityChannel>>> RetrieveChannel(string? userid)
         {
             var response = new ResponseDto<IEnumerable<CommunityChannel>>();
@@ -200,6 +241,43 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 _logger.LogError(ex.Message, ex);
                 response.DisplayMessage = "Error";
                 response.ErrorMessages = new List<string>() { "Channel not retrieved successfully" };
+                response.StatusCode = 400;
+                return response;
+            }
+        }
+
+        public async Task<ResponseDto<string>> AddMessage(string RoomId, string message, string messageType, string sentById)
+        {
+            var response = new ResponseDto<string>();
+            try
+            {
+                var check = await _communityChannelRepo.GetQueryable().FirstOrDefaultAsync(u => u.ChannelRoomId == RoomId);
+                if (check == null)
+                {
+                    response.DisplayMessage = "Error";
+                    response.StatusCode = 400;
+                    response.ErrorMessages = new List<string>() { "invalid Channel name" };
+                    return response;
+                }
+                var result = await _communityChannelMessageRepo.Add(new CommunityChannelMessage()
+                {
+                    ChannelCategoryId = check.Id,
+                    Message = message,
+                    MessageType = messageType,
+                    SentById = sentById,
+                });
+
+                await _communityChannelMessageRepo.SaveChanges();
+                response.StatusCode = 200;
+                response.DisplayMessage = "Success";
+                response.Result = "message sent successfully";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+                response.DisplayMessage = "Error";
+                response.ErrorMessages = new List<string>() { "message not sent successfully" };
                 response.StatusCode = 400;
                 return response;
             }

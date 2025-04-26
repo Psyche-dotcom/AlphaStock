@@ -14,16 +14,20 @@ namespace AlpaStock.Api.Extension
             {
                 option.ReturnHttpNotAcceptable = true;
             }).AddXmlDataContractSerializerFormatters().AddJsonOptions(x => x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
-
+            services.AddSignalR();
             services.AddCors(options =>
             {
-                options.AddDefaultPolicy(builder =>
+                options.AddDefaultPolicy(policy =>
                 {
-                    builder.AllowAnyMethod();
-                    builder.AllowAnyOrigin();
-                    builder.AllowAnyHeader();
+                    policy
+                        .AllowAnyMethod()
+                        .AllowAnyHeader()
+                        .SetIsOriginAllowed(origin => true) // Allow all origins dynamically
+                        .AllowCredentials(); // Allow cookies, auth headers
                 });
             });
+
+
 
             services.AddSwaggerGen(option =>
             {
