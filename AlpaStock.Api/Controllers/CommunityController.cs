@@ -122,6 +122,26 @@ namespace AlpaStock.Api.Controllers
             }
         }
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpGet("channel/messages/all")]
+        public async Task<IActionResult> GetChannelMessages (string RoomId)
+        {
+            var userid = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Jti)?.Value;
+            var result = await _communityService.RetrieveChannelMessages(RoomId,userid);
+
+            if (result.StatusCode == 200 || result.StatusCode == 201)
+            {
+                return Ok(result);
+            }
+            else if (result.StatusCode == 404)
+            {
+                return NotFound(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+        }
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet("retrieve/category/all")]
         public async Task<IActionResult> RetrieveCommunityCategory()
         {

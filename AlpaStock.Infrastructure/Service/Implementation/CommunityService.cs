@@ -58,7 +58,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     CreatedByUserId = userid,
                     CategoryId = catId,
                     Name = name,
-                    ChannelRoomId = name + _accountRepo.GenerateToken(),
+                    ChannelRoomId =_accountRepo.GenerateToken().ToString(),
                 });
 
                 await _communityChannelRepo.SaveChanges();
@@ -261,7 +261,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 }
                 var result = await _communityChannelMessageRepo.Add(new CommunityChannelMessage()
                 {
-                    ChannelCategoryId = check.Id,
+                    ChannelId = check.Id,
                     Message = message,
                     MessageType = messageType,
                     SentById = sentById,
@@ -278,6 +278,53 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 _logger.LogError(ex.Message, ex);
                 response.DisplayMessage = "Error";
                 response.ErrorMessages = new List<string>() { "message not sent successfully" };
+                response.StatusCode = 400;
+                return response;
+            }
+        }
+        public async Task<ResponseDto<IEnumerable<CommunityMesaagesReponse>>> RetrieveChannelMessages(string roomId, string userid)
+        {
+            var response = new ResponseDto<IEnumerable<CommunityMesaagesReponse>>();
+            try
+            {
+                var messages = await _communityChannelMessageRepo.GetQueryable().
+                    Where(u=>u.ChannelId == roomId).
+                    Select(u=> new CommunityMesaagesReponse
+                    {
+                        Id = u.Id,
+                        IsLiked = u.ChannelMessageLikes.FirstOrDefault(u=>u.UserId == userid) != null,
+                        IsUnLiked = u.ChannelMessageUnLikes.FirstOrDefault(u => u.UserId == userid) != null,
+                        Message = u.Message,
+                        MessageType = u.MessageType,
+                        LikeCount = u.ChannelMessageLikes.Count(),
+                        UnLikeCount = u.ChannelMessageUnLikes.Count(),
+                        SentByImgUrl = u.SentBy.ProfilePicture,
+                        SenderName = u.SentBy.FirstName+ " "+ u.SentBy.LastName,
+                        MessageReplyReponses = u.ChannelMesageReplies.Select(r => new CommunityMesaagesReply
+                        {
+                            MessageId = r.ChannelMessageId,
+                            ReplyId = r.Id,
+                            Message = r.Message,
+                            MessageType = r.MessageType,
+                            SentByImgUrl = r.SentBy.ProfilePicture,
+                            SenderName = r.SentBy.FirstName + " " + r.SentBy.LastName,
+                            
+                        }).ToList()
+                    } )
+                        
+                    .ToListAsync();
+
+               
+                response.Result = messages;
+                response.StatusCode = 200;
+                response.DisplayMessage = "Success";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+                response.DisplayMessage = "Error";
+                response.ErrorMessages = new List<string> { "Channel messages not retrieved successfully" };
                 response.StatusCode = 400;
                 return response;
             }
