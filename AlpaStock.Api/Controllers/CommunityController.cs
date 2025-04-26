@@ -102,7 +102,7 @@ namespace AlpaStock.Api.Controllers
             }
         }
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        [HttpPost("retrieve/category/channel/messages")]
+        [HttpGet("retrieve/category/channel/messages")]
         public async Task<IActionResult> GetCategoryChannelMessageCount()
         {
             var userid = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Jti)?.Value;
