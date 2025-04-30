@@ -308,6 +308,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                         UnLikeCount = u.ChannelMessageUnLikes.Count(),
                         SentByImgUrl = u.SentBy.ProfilePicture,
                         SenderName = u.SentBy.FirstName+ " "+ u.SentBy.LastName,
+                        Created = u.Created,
                         MessageReplyReponses = u.ChannelMesageReplies.Select(r => new CommunityMesaagesReply
                         {
                             MessageId = r.ChannelMessageId,
