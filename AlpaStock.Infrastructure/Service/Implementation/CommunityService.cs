@@ -287,8 +287,16 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             var response = new ResponseDto<IEnumerable<CommunityMesaagesReponse>>();
             try
             {
+                var retrieveChannelId = await _communityChannelRepo.GetQueryable().FirstOrDefaultAsync(u=>u.ChannelRoomId == roomId);
+                if(retrieveChannelId == null)
+                {
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Invalid Channel RoomId" };
+                    response.StatusCode = 400;
+                    return response;
+                }
                 var messages = await _communityChannelMessageRepo.GetQueryable().
-                    Where(u=>u.ChannelId == roomId).
+                    Where(u=>u.ChannelId == retrieveChannelId.Id).
                     Select(u=> new CommunityMesaagesReponse
                     {
                         Id = u.Id,
