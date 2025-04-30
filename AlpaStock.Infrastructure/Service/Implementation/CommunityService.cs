@@ -297,6 +297,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 }
                 var messages = await _communityChannelMessageRepo.GetQueryable().
                     Where(u=>u.ChannelId == retrieveChannelId.Id).
+                    OrderBy(u=>u.Created).
                     Select(u=> new CommunityMesaagesReponse
                     {
                         Id = u.Id,
