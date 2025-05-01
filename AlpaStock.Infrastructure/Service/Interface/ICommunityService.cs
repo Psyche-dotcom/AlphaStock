@@ -13,6 +13,6 @@ namespace AlpaStock.Infrastructure.Service.Interface
         Task<ResponseDto<IEnumerable<ChannelCategory>>> RetrieveCommunityCategory();
         Task<ResponseDto<IEnumerable<CommunityMesaagesReponse>>> RetrieveChannelMessages(string roomId, string userid);
         Task<ResponseDto<IEnumerable<ChannelRepDto>>> RetrieveCommunityCategory(string currentUserId);
-        Task<ResponseDto<string>> AddMessage(string RoomId, string message, string messageType, string sentById);
+        Task<ResponseDto<CommunityChannelMessage>> AddMessage(string RoomId, string message, string messageType, string sentById);
     }
 }

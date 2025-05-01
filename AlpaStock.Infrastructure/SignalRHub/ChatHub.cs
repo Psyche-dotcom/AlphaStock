@@ -32,18 +32,21 @@ namespace AlpaStock.Infrastructure.SignalRHub
             else
             {
                 var retrieveUserInfo = await _accountRepo.FindUserByIdAsync(sentById);
-                var messageDto = new
-                {
-                    RoomId = roomId,
-                    Message = message,
-                    MessageType = messageType,
-                    SentByImgUrl = retrieveUserInfo.ProfilePicture,
-                    SenderName = retrieveUserInfo.FirstName + " " + retrieveUserInfo.LastName
-
-                };
+              
                 var delivery = await _communityService.AddMessage(roomId, message, messageType, sentById);
                 if (delivery.StatusCode == 200 && retrieveUserInfo != null)
                 {
+                    var messageDto = new
+                    {
+                        RoomId = roomId,
+                        Message = message,
+                        MessageType = messageType,
+                        SentByImgUrl = retrieveUserInfo.ProfilePicture,
+                        SenderName = retrieveUserInfo.FirstName + " " + retrieveUserInfo.LastName,
+                        Created= delivery.Result.Created,
+                        Id = delivery.Result.Id
+
+                    };
                     await Clients.Group(roomId).SendAsync("ReceiveChannelMessage", messageDto);
                 }
 

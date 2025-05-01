@@ -247,9 +247,9 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             }
         }
 
-        public async Task<ResponseDto<string>> AddMessage(string RoomId, string message, string messageType, string sentById)
+        public async Task<ResponseDto<CommunityChannelMessage>> AddMessage(string RoomId, string message, string messageType, string sentById)
         {
-            var response = new ResponseDto<string>();
+            var response = new ResponseDto<CommunityChannelMessage>();
             try
             {
                 var check = await _communityChannelRepo.GetQueryable().FirstOrDefaultAsync(u => u.ChannelRoomId == RoomId);
@@ -271,7 +271,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 await _communityChannelMessageRepo.SaveChanges();
                 response.StatusCode = 200;
                 response.DisplayMessage = "Success";
-                response.Result = "message sent successfully";
+                response.Result = result;
                 return response;
             }
             catch (Exception ex)
