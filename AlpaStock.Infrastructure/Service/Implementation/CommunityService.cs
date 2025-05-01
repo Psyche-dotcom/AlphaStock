@@ -181,6 +181,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     .Include(c => c.CommunityChannels)
                         .ThenInclude(ch => ch.CommunityChannelMessages)
                             .ThenInclude(m => m.MessageReads)
+                            .OrderByDescending(u=>u.Created)
                     .ToListAsync();
 
                 var result = categories.Select(category => new ChannelRepDto
@@ -297,7 +298,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 }
                 var messages = await _communityChannelMessageRepo.GetQueryable().
                     Where(u=>u.ChannelId == retrieveChannelId.Id).
-                    OrderByDescending(u=>u.Created).
+                    OrderBy(u=>u.Created).
                     Select(u=> new CommunityMesaagesReponse
                     {
                         Id = u.Id,
