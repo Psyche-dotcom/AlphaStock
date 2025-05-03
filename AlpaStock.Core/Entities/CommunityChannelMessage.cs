@@ -6,6 +6,7 @@
         public ICollection<ChannelMessageLike> ChannelMessageLikes { get; set; }
         public ICollection<ChannelMessageUnLike> ChannelMessageUnLikes { get; set; }
         public ICollection<CommunityChannelMessageRead> MessageReads { get; set; }
+        public ICollection<FavoriteChannelMessage> MessageFave { get; set; }
         public CommunityChannel Channel { get; set; }
         public string ChannelId { get; set; }
         public string Message { get; set; }

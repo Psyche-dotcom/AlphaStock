@@ -86,7 +86,115 @@ namespace AlpaStock.Api.Controllers
             var userid = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Jti)?.Value;
 
 
-            var result = await _communityService.CreateCommunityCategory(CategoryName,userid);
+            var result = await _communityService.CreateCommunityCategory(CategoryName, userid);
+
+            if (result.StatusCode == 200 || result.StatusCode == 201)
+            {
+                return Ok(result);
+            }
+            else if (result.StatusCode == 404)
+            {
+                return NotFound(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+        }
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpPost("channel/message/like")]
+        public async Task<IActionResult> MessageLike(LikeReq req)
+        {
+            var userid = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Jti)?.Value;
+
+
+            var result = await _communityService.MessageLike(req, userid);
+
+            if (result.StatusCode == 200 || result.StatusCode == 201)
+            {
+                return Ok(result);
+            }
+            else if (result.StatusCode == 404)
+            {
+                return NotFound(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+        }
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpPost("channel/message/unlike")]
+        public async Task<IActionResult> MessageUnLike(LikeReq req)
+        {
+            var userid = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Jti)?.Value;
+
+
+            var result = await _communityService.MessageUnLike(req, userid);
+
+            if (result.StatusCode == 200 || result.StatusCode == 201)
+            {
+                return Ok(result);
+            }
+            else if (result.StatusCode == 404)
+            {
+                return NotFound(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+        }
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpPost("channel/message/saved")]
+        public async Task<IActionResult> SaveMessageToFAV(LikeReq req)
+        {
+            var userid = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Jti)?.Value;
+
+
+            var result = await _communityService.SaveMessageToFAV(req, userid);
+
+            if (result.StatusCode == 200 || result.StatusCode == 201)
+            {
+                return Ok(result);
+            }
+            else if (result.StatusCode == 404)
+            {
+                return NotFound(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+        }
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpGet("channel/message/reply")]
+        public async Task<IActionResult> RetrieveChannelMessagesReply(string messageid)
+        {
+
+            var result = await _communityService.RetrieveChannelMessagesReply(messageid);
+
+            if (result.StatusCode == 200 || result.StatusCode == 201)
+            {
+                return Ok(result);
+            }
+            else if (result.StatusCode == 404)
+            {
+                return NotFound(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+        }
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpGet("channel/message/fav")]
+        public async Task<IActionResult> RetrieveFavChannelMessages()
+        {
+            var userid = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Jti)?.Value;
+
+
+            var result = await _communityService.RetrieveFavChannelMessages(userid);
 
             if (result.StatusCode == 200 || result.StatusCode == 201)
             {
@@ -123,10 +231,10 @@ namespace AlpaStock.Api.Controllers
         }
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet("channel/messages/all")]
-        public async Task<IActionResult> GetChannelMessages (string RoomId)
+        public async Task<IActionResult> GetChannelMessages(string RoomId)
         {
             var userid = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Jti)?.Value;
-            var result = await _communityService.RetrieveChannelMessages(RoomId,userid);
+            var result = await _communityService.RetrieveChannelMessages(RoomId, userid);
 
             if (result.StatusCode == 200 || result.StatusCode == 201)
             {

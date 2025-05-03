@@ -3,6 +3,7 @@ using System;
 using AlpaStock.Core.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AlpaStock.Core.Migrations
 {
     [DbContext(typeof(AlphaContext))]
-    partial class AlphaContextModelSnapshot : ModelSnapshot
+    [Migration("20250502233900_Add fav message")]
+    partial class Addfavmessage
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -150,7 +153,7 @@ namespace AlpaStock.Core.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("BlogPosts", (string)null);
+                    b.ToTable("BlogPosts");
                 });
 
             modelBuilder.Entity("AlpaStock.Core.Entities.BlogPostLike", b =>
@@ -182,7 +185,7 @@ namespace AlpaStock.Core.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("BlogPostLikes", (string)null);
+                    b.ToTable("BlogPostLikes");
                 });
 
             modelBuilder.Entity("AlpaStock.Core.Entities.ChannelCategory", b =>
@@ -212,7 +215,7 @@ namespace AlpaStock.Core.Migrations
 
                     b.HasIndex("CreatedByUserId");
 
-                    b.ToTable("ChannelCategories", (string)null);
+                    b.ToTable("ChannelCategories");
                 });
 
             modelBuilder.Entity("AlpaStock.Core.Entities.ChannelMesageReply", b =>
@@ -252,7 +255,7 @@ namespace AlpaStock.Core.Migrations
 
                     b.HasIndex("SentById");
 
-                    b.ToTable("ChannelMesageReplies", (string)null);
+                    b.ToTable("ChannelMesageReplies");
                 });
 
             modelBuilder.Entity("AlpaStock.Core.Entities.ChannelMessageLike", b =>
@@ -284,7 +287,7 @@ namespace AlpaStock.Core.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ChannelMessageLikies", (string)null);
+                    b.ToTable("ChannelMessageLikies");
                 });
 
             modelBuilder.Entity("AlpaStock.Core.Entities.ChannelMessageUnLike", b =>
@@ -316,7 +319,7 @@ namespace AlpaStock.Core.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ChannelMessageUnLikies", (string)null);
+                    b.ToTable("ChannelMessageUnLikies");
                 });
 
             modelBuilder.Entity("AlpaStock.Core.Entities.Comment", b =>
@@ -352,7 +355,7 @@ namespace AlpaStock.Core.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Comments", (string)null);
+                    b.ToTable("Comments");
                 });
 
             modelBuilder.Entity("AlpaStock.Core.Entities.CommentLike", b =>
@@ -384,7 +387,7 @@ namespace AlpaStock.Core.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("CommentLikes", (string)null);
+                    b.ToTable("CommentLikes");
                 });
 
             modelBuilder.Entity("AlpaStock.Core.Entities.CommentReply", b =>
@@ -420,7 +423,7 @@ namespace AlpaStock.Core.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("CommentReplies", (string)null);
+                    b.ToTable("CommentReplies");
                 });
 
             modelBuilder.Entity("AlpaStock.Core.Entities.CommunityChannel", b =>
@@ -460,7 +463,7 @@ namespace AlpaStock.Core.Migrations
 
                     b.HasIndex("CreatedByUserId");
 
-                    b.ToTable("CommunityChannels", (string)null);
+                    b.ToTable("CommunityChannels");
                 });
 
             modelBuilder.Entity("AlpaStock.Core.Entities.CommunityChannelMessage", b =>
@@ -500,7 +503,7 @@ namespace AlpaStock.Core.Migrations
 
                     b.HasIndex("SentById");
 
-                    b.ToTable("CommunityChannelMessages", (string)null);
+                    b.ToTable("CommunityChannelMessages");
                 });
 
             modelBuilder.Entity("AlpaStock.Core.Entities.CommunityChannelMessageRead", b =>
@@ -535,7 +538,7 @@ namespace AlpaStock.Core.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("CommunityChannelMessageRead", (string)null);
+                    b.ToTable("CommunityChannelMessageRead");
                 });
 
             modelBuilder.Entity("AlpaStock.Core.Entities.ConfirmEmailToken", b =>
@@ -565,7 +568,7 @@ namespace AlpaStock.Core.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("ConfirmEmailTokens", (string)null);
+                    b.ToTable("ConfirmEmailTokens");
                 });
 
             modelBuilder.Entity("AlpaStock.Core.Entities.FavoriteChannelMessage", b =>
@@ -597,7 +600,7 @@ namespace AlpaStock.Core.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("FavoriteChannelMessages", (string)null);
+                    b.ToTable("FavoriteChannelMessages");
                 });
 
             modelBuilder.Entity("AlpaStock.Core.Entities.ForgetPasswordToken", b =>
@@ -632,7 +635,7 @@ namespace AlpaStock.Core.Migrations
                     b.HasIndex("userid")
                         .IsUnique();
 
-                    b.ToTable("ForgetPasswordTokens", (string)null);
+                    b.ToTable("ForgetPasswordTokens");
                 });
 
             modelBuilder.Entity("AlpaStock.Core.Entities.Payments", b =>
@@ -693,7 +696,7 @@ namespace AlpaStock.Core.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Payments", (string)null);
+                    b.ToTable("Payments");
                 });
 
             modelBuilder.Entity("AlpaStock.Core.Entities.StockWishList", b =>
@@ -729,7 +732,7 @@ namespace AlpaStock.Core.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("StockWishLists", (string)null);
+                    b.ToTable("StockWishLists");
                 });
 
             modelBuilder.Entity("AlpaStock.Core.Entities.Subscription", b =>
@@ -766,7 +769,7 @@ namespace AlpaStock.Core.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Subscriptions", (string)null);
+                    b.ToTable("Subscriptions");
                 });
 
             modelBuilder.Entity("AlpaStock.Core.Entities.SubscriptionFeatures", b =>
@@ -808,7 +811,7 @@ namespace AlpaStock.Core.Migrations
 
                     b.HasIndex("SubscriptionId");
 
-                    b.ToTable("SubscriptionFeatures", (string)null);
+                    b.ToTable("SubscriptionFeatures");
                 });
 
             modelBuilder.Entity("AlpaStock.Core.Entities.UserCommunityChannel", b =>
@@ -846,7 +849,7 @@ namespace AlpaStock.Core.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserCommunityChannels", (string)null);
+                    b.ToTable("UserCommunityChannels");
                 });
 
             modelBuilder.Entity("AlpaStock.Core.Entities.UserSubscription", b =>
@@ -887,7 +890,7 @@ namespace AlpaStock.Core.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserSubscriptions", (string)null);
+                    b.ToTable("UserSubscriptions");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>

@@ -1,4 +1,6 @@
 ﻿using AlpaStock.Core.DTOs;
+using AlpaStock.Core.DTOs.Request.Blog;
+using AlpaStock.Core.DTOs.Request.Community;
 using AlpaStock.Core.DTOs.Response.Community;
 using AlpaStock.Core.Entities;
 using AlpaStock.Core.Repositories.Interface;
@@ -13,6 +15,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
         private readonly IAlphaRepository<ChannelCategory> _channelCategoryRepo;
         private readonly ILogger<CommunityService> _logger;
         private readonly IAccountRepo _accountRepo;
+        private readonly IAlphaRepository<FavoriteChannelMessage> _favoriteChannelMessageRepo;
         private readonly IAlphaRepository<ChannelMesageReply> _channelMesageReplyRepo;
         private readonly IAlphaRepository<ChannelMessageLike> _channelMessageLikeRepo;
         private readonly IAlphaRepository<ChannelMessageUnLike> _ChannelMessageUnLikeRepo;
@@ -28,7 +31,8 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             IAlphaRepository<ChannelMesageReply> channelMesageReplyRepo,
             ILogger<CommunityService> logger,
             IAccountRepo accountRepo,
-            IAlphaRepository<ChannelCategory> channelCategoryRepo)
+            IAlphaRepository<ChannelCategory> channelCategoryRepo,
+            IAlphaRepository<FavoriteChannelMessage> favoriteChannelMessageRepo)
         {
             _userCommunityChannelRepo = userCommunityChannelMessageRepo;
             _communityChannelMessageRepo = communityChannelMessageRepo;
@@ -39,6 +43,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             _logger = logger;
             _accountRepo = accountRepo;
             _channelCategoryRepo = channelCategoryRepo;
+            _favoriteChannelMessageRepo = favoriteChannelMessageRepo;
         }
         public async Task<ResponseDto<string>> AddChannel(string catId, string userid, string name)
         {
@@ -121,6 +126,143 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 return response;
             }
         }
+        public async Task<ResponseDto<string>> MessageLike(LikeReq req, string userid)
+        {
+            var response = new ResponseDto<string>();
+            try
+            {
+                var check = await _communityChannelMessageRepo.GetQueryable().FirstOrDefaultAsync(u =>  u.Id == req.MessageId);
+                if (check == null)
+                {
+                    
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Invalid Message Id" };
+                    return response;
+
+                }
+                var checkCurrent = await _channelMessageLikeRepo.GetQueryable().FirstOrDefaultAsync(u=>u.UserId == userid && u.MessageId == req.MessageId);
+                if (check != null)
+                {
+                    _channelMessageLikeRepo.Delete(checkCurrent);
+                    await _channelMessageLikeRepo.SaveChanges();
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Success";
+                    response.Result = "Message like remove successfully";
+                    return response;
+
+                }
+                var result = await _channelMessageLikeRepo.Add(new ChannelMessageLike()
+                {
+
+                    UserId = userid,
+                    MessageId = req.MessageId,
+
+                });
+
+                await _channelMessageLikeRepo.SaveChanges();
+                response.StatusCode = 200;
+                response.DisplayMessage = "Success";
+                response.Result = "Message like successfully";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+                response.DisplayMessage = "Error";
+                response.ErrorMessages = new List<string>() { "Message like service not available" };
+                response.StatusCode = 400;
+                return response;
+            }
+        }  
+        public async Task<ResponseDto<string>> SaveMessageToFAV(LikeReq req, string userid)
+        {
+            var response = new ResponseDto<string>();
+            try
+            {
+                var check = await _favoriteChannelMessageRepo.GetQueryable().FirstOrDefaultAsync(u =>  u.Id == req.MessageId && u.UserId == userid);
+                if (check != null)
+                {
+                    
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Message already saved as favourite" };
+                    return response;
+
+                }
+                
+                var result = await _favoriteChannelMessageRepo.Add(new FavoriteChannelMessage()
+                {
+
+                    UserId = userid,
+                    MessageId = req.MessageId,
+
+                });
+
+                await _channelMessageLikeRepo.SaveChanges();
+                response.StatusCode = 200;
+                response.DisplayMessage = "Success";
+                response.Result = "Message saved successfully as favourite";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+                response.DisplayMessage = "Error";
+                response.ErrorMessages = new List<string>() { "Message favourite service not available" };
+                response.StatusCode = 400;
+                return response;
+            }
+        }
+        public async Task<ResponseDto<string>> MessageUnLike(LikeReq req, string userid)
+        {
+            var response = new ResponseDto<string>();
+            try
+            {
+                var check = await _communityChannelMessageRepo.GetQueryable().FirstOrDefaultAsync(u =>  u.Id == req.MessageId);
+                if (check == null)
+                {
+                    
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Invalid Message Id" };
+                    return response;
+
+                }
+                var checkCurrent = await _ChannelMessageUnLikeRepo.GetQueryable().FirstOrDefaultAsync(u=>u.UserId == userid && u.MessageId == req.MessageId);
+                if (check != null)
+                {
+                    _ChannelMessageUnLikeRepo.Delete(checkCurrent);
+                    await _ChannelMessageUnLikeRepo.SaveChanges();
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Success";
+                    response.Result = "Message unlike remove successfully";
+                    return response;
+
+                }
+                var result = await _ChannelMessageUnLikeRepo.Add(new ChannelMessageUnLike()
+                {
+
+                    UserId = userid,
+                    MessageId = req.MessageId,
+
+                });
+
+                await _ChannelMessageUnLikeRepo.SaveChanges();
+                response.StatusCode = 200;
+                response.DisplayMessage = "Success";
+                response.Result = "Message unlike successfully";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+                response.DisplayMessage = "Error";
+                response.ErrorMessages = new List<string>() { "Message unlike service not available" };
+                response.StatusCode = 400;
+                return response;
+            }
+        }
         public async Task<ResponseDto<string>> CreateCommunityCategory(string CategoryName, string UserId)
         {
             var response = new ResponseDto<string>();
@@ -171,7 +313,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             }
         }
 
-       
+      
         public async Task<ResponseDto<IEnumerable<ChannelRepDto>>> RetrieveCommunityCategory(string currentUserId)
         {
             var response = new ResponseDto<IEnumerable<ChannelRepDto>>();
@@ -311,16 +453,8 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                         SentByImgUrl = u.SentBy.ProfilePicture,
                         SenderName = u.SentBy.FirstName+ " "+ u.SentBy.LastName,
                         Created = u.Created,
-                        MessageReplyReponses = u.ChannelMesageReplies.Select(r => new CommunityMesaagesReply
-                        {
-                            MessageId = r.ChannelMessageId,
-                            ReplyId = r.Id,
-                            Message = r.Message,
-                            MessageType = r.MessageType,
-                            SentByImgUrl = r.SentBy.ProfilePicture,
-                            SenderName = r.SentBy.FirstName + " " + r.SentBy.LastName,
-                            
-                        }).ToList()
+                        IsSaved = u.MessageFave.FirstOrDefault(u => u.UserId == userid) != null,
+
                     } )
                         
                     .ToListAsync();
@@ -336,6 +470,80 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 _logger.LogError(ex.Message, ex);
                 response.DisplayMessage = "Error";
                 response.ErrorMessages = new List<string> { "Channel messages not retrieved successfully" };
+                response.StatusCode = 400;
+                return response;
+            }
+        }
+        public async Task<ResponseDto<IEnumerable<CommunityMesaagesReponse>>> RetrieveFavChannelMessages(string userid)
+        {
+            var response = new ResponseDto<IEnumerable<CommunityMesaagesReponse>>();
+            try
+            {
+               
+                var messages = await _favoriteChannelMessageRepo.GetQueryable().
+                    Where(u=>u.UserId == userid).
+                    OrderBy(u=>u.Created).
+                    Select(u=> new CommunityMesaagesReponse
+                    {
+                        Id = u.Message.Id,
+                        IsLiked = u.Message.ChannelMessageLikes.FirstOrDefault(u=>u.UserId == userid) != null,
+                        IsUnLiked = u.Message.ChannelMessageUnLikes.FirstOrDefault(u => u.UserId == userid) != null,
+                        Message = u.Message.Message,
+                        MessageType = u.Message.MessageType,
+                        LikeCount = u.Message.ChannelMessageLikes.Count(),
+                        UnLikeCount = u.Message.ChannelMessageUnLikes.Count(),
+                        SentByImgUrl = u.Message.SentBy.ProfilePicture,
+                        SenderName = u.Message.SentBy.FirstName+ " "+ u.Message.SentBy.LastName,
+                        Created = u.Message.Created,
+                       IsSaved = u.Message.MessageFave.FirstOrDefault(u => u.UserId == userid) != null,
+                    } )
+                        
+                    .ToListAsync();
+
+               
+                response.Result = messages;
+                response.StatusCode = 200;
+                response.DisplayMessage = "Success";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+                response.DisplayMessage = "Error";
+                response.ErrorMessages = new List<string> { "Saved Channel messages not retrieved successfully" };
+                response.StatusCode = 400;
+                return response;
+            }
+        }
+        public async Task<ResponseDto<IEnumerable<CommunityMesaagesReply>>> RetrieveChannelMessagesReply(string messageid)
+        {
+            var response = new ResponseDto<IEnumerable<CommunityMesaagesReply>>();
+            try
+            {
+
+                var messages = await _channelMesageReplyRepo.GetQueryable().
+                    Where(u => u.ChannelMessageId == messageid).
+                    OrderBy(u => u.Created).
+                    Select(r => new CommunityMesaagesReply
+                    {
+
+                        MessageId = r.ChannelMessageId,
+                        ReplyId = r.Id,
+                        Message = r.Message,
+                        MessageType = r.MessageType,
+                        SentByImgUrl = r.SentBy.ProfilePicture,
+                        SenderName = r.SentBy.FirstName + " " + r.SentBy.LastName,
+                    }).ToListAsync();
+                response.Result = messages;
+                response.StatusCode = 200;
+                response.DisplayMessage = "Success";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+                response.DisplayMessage = "Error";
+                response.ErrorMessages = new List<string> { "Channel messages reply not retrieved successfully" };
                 response.StatusCode = 400;
                 return response;
             }

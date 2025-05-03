@@ -24,6 +24,7 @@ namespace AlpaStock.Core.Context
         public DbSet<ChannelMessageUnLike> ChannelMessageUnLikies { get; set; }
         public DbSet<CommunityChannel> CommunityChannels { get; set; }
         public DbSet<CommunityChannelMessage> CommunityChannelMessages { get; set; }
+        public DbSet<FavoriteChannelMessage> FavoriteChannelMessages { get; set; }
         public DbSet<UserCommunityChannel> UserCommunityChannels { get; set; }
         
         public AlphaContext(DbContextOptions options) : base(options) { }
