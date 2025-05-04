@@ -852,6 +852,221 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 return response;
             }
         }
+
+
+        public async Task<ResponseDto<StockAlphaResp>> StockAlphaRequest(string symbol, string period)
+        {
+            var response = new ResponseDto<StockAlphaResp>();
+
+            try
+            {
+                var getQuote = await GetStockQuote(symbol);
+                if (getQuote.StatusCode != 200)
+                {
+                    response.StatusCode = getQuote.StatusCode;
+                    response.DisplayMessage = getQuote.DisplayMessage;
+                    response.ErrorMessages = getQuote.ErrorMessages;
+                    return response;
+                }
+
+                var apiUrlBalance = _baseUrl + $"stable/balance-sheet-statement?symbol={symbol}&period={period}&limit=10";
+                var makeRequestBalance = await _apiClient.GetAsync<string>(apiUrlBalance);
+                if (!makeRequestBalance.IsSuccessful)
+                {
+                    _logger.LogError("stock balance-sheet-statement error mess", makeRequestBalance.ErrorMessage);
+                    _logger.LogError("stock balance-sheet-statement error ex", makeRequestBalance.ErrorException);
+                    _logger.LogError("stock balance-sheet-statement error con", makeRequestBalance.Content);
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Unable to get the stock balance sheet statement" };
+                    return response;
+                }
+                var resultBalance = JsonConvert.DeserializeObject<List<BalanceSheetResp>>(makeRequestBalance.Content);
+                if (!resultBalance.Any())
+                {
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Stock balance sheet statement is empty" };
+                    return response;
+                }
+
+                var apiUrlCash = _baseUrl + $"stable/cash-flow-statement?symbol={symbol}&period={period}&limit=10";
+                var makeRequestCash = await _apiClient.GetAsync<string>(apiUrlCash);
+                if (!makeRequestCash.IsSuccessful)
+                {
+                    _logger.LogError("stock cash-flow-statement error mess", makeRequestCash.ErrorMessage);
+                    _logger.LogError("stock cash-flow-statement error ex", makeRequestCash.ErrorException);
+                    _logger.LogError("stock cash-flow-statement error con", makeRequestCash.Content);
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Unable to get the stock cash flow statement" };
+                    return response;
+                }
+
+
+                var resultCash = JsonConvert.DeserializeObject<List<CashFlowStatement>>(makeRequestCash.Content);
+                if (!resultCash.Any())
+                {
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Stock cash flow statement is empty" };
+                    return response;
+                }
+
+                var apiUrlIcome = _baseUrl + $"stable/income-statement?symbol={symbol}&period={period}&limit=10";
+                var makeRequestIncome = await _apiClient.GetAsync<string>(apiUrlIcome);
+                if (!makeRequestIncome.IsSuccessful)
+                {
+                    _logger.LogError("stock income statement error mess", makeRequestIncome.ErrorMessage);
+                    _logger.LogError("stock income statement error ex", makeRequestIncome.ErrorException);
+                    _logger.LogError("stock income statement error con", makeRequestIncome.Content);
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Unable to get the stock Income statement" };
+                    return response;
+                }
+                var resultIncome = JsonConvert.DeserializeObject<List<IncomeStatementResp>>(makeRequestIncome.Content);
+                if (!resultIncome.Any())
+                {
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Stock Income statement is empty" };
+                    return response;
+                }
+
+
+                var latestPrice = getQuote.Result[0].price;
+                var latestIncomeStatement = resultIncome[0];
+                var latestBalanceSheet = resultBalance[0];
+                var latestCashFlow = resultCash[0];
+
+
+
+                var netIncome = latestIncomeStatement.NetIncome;
+                var revenue = latestIncomeStatement.Revenue;
+
+
+
+                var fcfMargins = new List<double>();
+                var roics = new List<double>();
+
+                for (int i = 0; i < resultIncome.Count && i < 10; i++)
+                {
+                    var fcf = CalculateFCF((long)resultCash[i].OperatingCashFlow, (long)resultCash[i].CapitalExpenditure);
+                    var fcfMargin = CalculateFCFMargin(fcf, (double)resultIncome[i].Revenue);
+                    var roic = CalculateROIC((double)resultIncome[i].NetIncome, (double)resultBalance[i].TotalDebt, (double)resultBalance[i].CashAndCashEquivalents, (double)resultBalance[i].TotalEquity);
+
+                    fcfMargins.Add(fcfMargin);
+                    roics.Add(roic);
+                }
+
+                var pe = CalculatePE(getQuote.Result[0].marketCap, (double)resultIncome[0].NetIncome);
+                var pfcf = CalculatePFCF(getQuote.Result[0].marketCap, CalculateFCF((long)resultCash[0].OperatingCashFlow, (long)resultCash[0].CapitalExpenditure));
+
+
+
+
+                double profitMargin = (double)(netIncome / revenue);
+                double revenueGrowth = CalculateYoYGrowth((double)resultIncome[0].Revenue, (double)resultIncome[1].Revenue);
+
+                var ROIC = new ROIC();
+                var RevenueGrowth = new RevenueGrowth();
+                var ProfitMargin = new ProfitMargin();
+                var FreeCashFlowMargin = new FreeCashFlowMargin();
+                var PERatio = new PERatio();
+                var PFCF = new PFCF();
+                var Weighted = new WeightedAverageShsOut();
+                var NetIcome = new NetIncomeAlpha();
+
+
+
+                Weighted.First = $"{latestIncomeStatement.WeightedAverageShsOut:F2}";
+                NetIcome.First = $"{latestIncomeStatement.NetIncome:F2}"; 
+                ROIC.First = $"{roics[0]:F2}%";
+                RevenueGrowth.First = revenueGrowth.ToString() + "%";
+                ProfitMargin.First = (profitMargin * 100).ToString() + "%";
+                FreeCashFlowMargin.First = $"{fcfMargins[0]:F2}%";
+                PERatio.First = $"{pe:F2}";
+                PFCF.First = $"{pfcf:F2}";
+
+
+
+                var latestPrice1 = getQuote.Result[0].price;
+                var latestIncomeStatement1 = resultIncome[4];
+                var latestBalanceSheet1 = resultBalance[4];
+                var latestCashFlow1 = resultCash[4];
+
+
+                var netIncome1 = latestIncomeStatement1.NetIncome;
+                var revenue1 = latestIncomeStatement1.Revenue;
+
+
+
+                double profitMargin1 = (double)(netIncome1 / revenue1);
+                double revenueGrowth1 = CalculateCAGR((double)resultIncome[0].Revenue, (double)resultIncome[4].Revenue, 5);
+
+                Weighted.Fifth = $"{latestIncomeStatement1.WeightedAverageShsOut:F2}";
+                NetIcome.Fifth = $"{latestIncomeStatement1.NetIncome:F2}";
+                ROIC.Fifth = $"{roics.Take(5).Average():F2}%";
+                RevenueGrowth.Fifth = revenueGrowth1.ToString();
+                ProfitMargin.Fifth = (profitMargin1 * 100).ToString();
+                FreeCashFlowMargin.Fifth = $"{fcfMargins.Take(5).Average():F2}%";
+
+
+
+                var latestPrice2 = getQuote.Result[0].price;
+                var latestIncomeStatement2 = resultIncome[9];
+                var latestBalanceSheet2 = resultBalance[9];
+                var latestCashFlow2 = resultCash[9];
+
+
+                var netIncome2 = latestIncomeStatement2.NetIncome;
+                var revenue2 = latestIncomeStatement2.Revenue;
+
+
+                double profitMargin2 = (double)(netIncome2 / revenue2);
+                double revenueGrowth2 = CalculateCAGR((double)resultIncome[0].Revenue, (double)resultIncome[9].Revenue, 10);
+
+                Weighted.Ten = $"{latestIncomeStatement2.WeightedAverageShsOut:F2}";
+                NetIcome.Ten = $"{latestIncomeStatement2.NetIncome:F2}";
+                ROIC.Ten = $"{roics.Take(10).Average():F2}%";
+                RevenueGrowth.Ten = revenueGrowth2.ToString();
+                ProfitMargin.Ten = (profitMargin2 * 100).ToString();
+                FreeCashFlowMargin.Ten = $"{fcfMargins.Take(10).Average():F2}%";
+
+
+                response.StatusCode = 200;
+                response.DisplayMessage = "Success";
+                response.Result = new StockAlphaResp()
+                {
+                    ROIC = ROIC,
+                    RevGrowth = RevenueGrowth,
+                    PERatio = PERatio,
+                    FreeCashFlowMargin = FreeCashFlowMargin,
+                    PFCF = PFCF,
+                    ProfitMargin = ProfitMargin,
+                    MarketCap=  $"{getQuote.Result[0].marketCap:F2}",
+                    AverageShareOutstanding=Weighted,
+                    NetIcome = NetIcome,
+                   
+
+                };
+                return response;
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"metric ex - {ex.Message}", ex);
+                response.ErrorMessages = new List<string> { "Unable to get the stock alpha stats at the moment" };
+                response.StatusCode = 500;
+                response.DisplayMessage = "Error";
+                return response;
+            }
+        }
+
+
+
+
         private double CalculateYoYGrowth(double current, double previous)
         {
             return ((double)(current - previous) / previous) * 100;

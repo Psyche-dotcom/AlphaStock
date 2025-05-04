@@ -1,5 +1,4 @@
 ﻿using AlpaStock.Core.DTOs;
-using AlpaStock.Core.DTOs.Request.Blog;
 using AlpaStock.Core.DTOs.Request.Community;
 using AlpaStock.Core.DTOs.Response.Community;
 using AlpaStock.Core.Entities;
@@ -63,7 +62,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     CreatedByUserId = userid,
                     CategoryId = catId,
                     Name = name,
-                    ChannelRoomId =_accountRepo.GenerateToken().ToString(),
+                    ChannelRoomId = _accountRepo.GenerateToken().ToString(),
                 });
 
                 await _communityChannelRepo.SaveChanges();
@@ -131,17 +130,17 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             var response = new ResponseDto<string>();
             try
             {
-                var check = await _communityChannelMessageRepo.GetQueryable().FirstOrDefaultAsync(u =>  u.Id == req.MessageId);
+                var check = await _communityChannelMessageRepo.GetQueryable().FirstOrDefaultAsync(u => u.Id == req.MessageId);
                 if (check == null)
                 {
-                    
+
                     response.StatusCode = 400;
                     response.DisplayMessage = "Error";
                     response.ErrorMessages = new List<string>() { "Invalid Message Id" };
                     return response;
 
                 }
-                var checkCurrent = await _channelMessageLikeRepo.GetQueryable().FirstOrDefaultAsync(u=>u.UserId == userid && u.MessageId == req.MessageId);
+                var checkCurrent = await _channelMessageLikeRepo.GetQueryable().FirstOrDefaultAsync(u => u.UserId == userid && u.MessageId == req.MessageId);
                 if (checkCurrent != null)
                 {
                     _channelMessageLikeRepo.Delete(checkCurrent);
@@ -174,13 +173,13 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 response.StatusCode = 400;
                 return response;
             }
-        }  
+        }
         public async Task<ResponseDto<string>> SaveMessageToFAV(LikeReq req, string userid)
         {
             var response = new ResponseDto<string>();
             try
             {
-                var check = await _favoriteChannelMessageRepo.GetQueryable().FirstOrDefaultAsync(u =>  u.MessageId == req.MessageId && u.UserId == userid);
+                var check = await _favoriteChannelMessageRepo.GetQueryable().FirstOrDefaultAsync(u => u.MessageId == req.MessageId && u.UserId == userid);
                 if (check != null)
                 {
                     _favoriteChannelMessageRepo.Delete(check);
@@ -192,7 +191,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     return response;
 
                 }
-                
+
                 var result = await _favoriteChannelMessageRepo.Add(new FavoriteChannelMessage()
                 {
 
@@ -221,24 +220,24 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             var response = new ResponseDto<string>();
             try
             {
-                var check = await _communityChannelMessageRepo.GetQueryable().FirstOrDefaultAsync(u =>  u.Id == req.MessageId);
+                var check = await _communityChannelMessageRepo.GetQueryable().FirstOrDefaultAsync(u => u.Id == req.MessageId);
                 if (check == null)
                 {
-                    
+
                     response.StatusCode = 400;
                     response.DisplayMessage = "Error";
                     response.ErrorMessages = new List<string>() { "Invalid Message Id" };
                     return response;
 
                 }
-                var checkCurrent = await _ChannelMessageUnLikeRepo.GetQueryable().FirstOrDefaultAsync(u=>u.UserId == userid && u.MessageId == req.MessageId);
+                var checkCurrent = await _ChannelMessageUnLikeRepo.GetQueryable().FirstOrDefaultAsync(u => u.UserId == userid && u.MessageId == req.MessageId);
                 if (checkCurrent != null)
                 {
                     _ChannelMessageUnLikeRepo.Delete(checkCurrent);
                     await _ChannelMessageUnLikeRepo.SaveChanges();
                     response.StatusCode = 200;
                     response.DisplayMessage = "Success";
-                    response.Result = "Message unlike remove successfully";
+                    response.Result = "Message downvote remove successfully";
                     return response;
 
                 }
@@ -253,14 +252,14 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 await _ChannelMessageUnLikeRepo.SaveChanges();
                 response.StatusCode = 200;
                 response.DisplayMessage = "Success";
-                response.Result = "Message unlike successfully";
+                response.Result = "Message downvote successfully";
                 return response;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.Message, ex);
                 response.DisplayMessage = "Error";
-                response.ErrorMessages = new List<string>() { "Message unlike service not available" };
+                response.ErrorMessages = new List<string>() { "Message downvote service not available" };
                 response.StatusCode = 400;
                 return response;
             }
@@ -296,7 +295,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             var response = new ResponseDto<IEnumerable<ChannelCategory>>();
             try
             {
-                var RetrieveCat = await _channelCategoryRepo.GetQueryable().Include(u=>u.CommunityChannels)
+                var RetrieveCat = await _channelCategoryRepo.GetQueryable().Include(u => u.CommunityChannels)
                     .ToListAsync();
 
                 response.Result = RetrieveCat;
@@ -315,7 +314,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             }
         }
 
-      
+
         public async Task<ResponseDto<IEnumerable<ChannelRepDto>>> RetrieveCommunityCategory(string currentUserId)
         {
             var response = new ResponseDto<IEnumerable<ChannelRepDto>>();
@@ -325,7 +324,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     .Include(c => c.CommunityChannels)
                         .ThenInclude(ch => ch.CommunityChannelMessages)
                             .ThenInclude(m => m.MessageReads)
-                            .OrderByDescending(u=>u.Created)
+                            .OrderByDescending(u => u.Created)
                     .ToListAsync();
 
                 var result = categories.Select(category => new ChannelRepDto
@@ -336,7 +335,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     {
                         Id = channel.Id,
                         Name = channel.Name,
-                        ChannelRoomName= channel.ChannelRoomId,
+                        ChannelRoomName = channel.ChannelRoomId,
                         UnreadCount = channel.CommunityChannelMessages
                             .Count(msg => !msg.MessageReads.Any(read => read.UserId == currentUserId))
                     }).ToList()
@@ -371,8 +370,8 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     return response;
                 }
 
-                var result = await _communityChannelRepo.GetQueryable().Include(u=>u.Category)
-                    .Include(u=>u.CreatedByUser)
+                var result = await _communityChannelRepo.GetQueryable().Include(u => u.Category)
+                    .Include(u => u.CreatedByUser)
                  .ToListAsync();
                 response.StatusCode = 200;
                 response.DisplayMessage = "Success";
@@ -432,8 +431,8 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             var response = new ResponseDto<IEnumerable<CommunityMesaagesReponse>>();
             try
             {
-                var retrieveChannelId = await _communityChannelRepo.GetQueryable().FirstOrDefaultAsync(u=>u.ChannelRoomId == roomId);
-                if(retrieveChannelId == null)
+                var retrieveChannelId = await _communityChannelRepo.GetQueryable().FirstOrDefaultAsync(u => u.ChannelRoomId == roomId);
+                if (retrieveChannelId == null)
                 {
                     response.DisplayMessage = "Error";
                     response.ErrorMessages = new List<string>() { "Invalid Channel RoomId" };
@@ -441,27 +440,27 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     return response;
                 }
                 var messages = await _communityChannelMessageRepo.GetQueryable().
-                    Where(u=>u.ChannelId == retrieveChannelId.Id).
-                    OrderBy(u=>u.Created).
-                    Select(u=> new CommunityMesaagesReponse
+                    Where(u => u.ChannelId == retrieveChannelId.Id).
+                    OrderBy(u => u.Created).
+                    Select(u => new CommunityMesaagesReponse
                     {
                         Id = u.Id,
-                        IsLiked = u.ChannelMessageLikes.FirstOrDefault(u=>u.UserId == userid) != null,
+                        IsLiked = u.ChannelMessageLikes.FirstOrDefault(u => u.UserId == userid) != null,
                         IsUnLiked = u.ChannelMessageUnLikes.FirstOrDefault(u => u.UserId == userid) != null,
                         Message = u.Message,
                         MessageType = u.MessageType,
                         LikeCount = u.ChannelMessageLikes.Count(),
                         UnLikeCount = u.ChannelMessageUnLikes.Count(),
                         SentByImgUrl = u.SentBy.ProfilePicture,
-                        SenderName = u.SentBy.FirstName+ " "+ u.SentBy.LastName,
+                        SenderName = u.SentBy.FirstName + " " + u.SentBy.LastName,
                         Created = u.Created,
                         IsSaved = u.MessageFave.FirstOrDefault(u => u.UserId == userid) != null,
 
-                    } )
-                        
+                    })
+
                     .ToListAsync();
 
-               
+
                 response.Result = messages;
                 response.StatusCode = 200;
                 response.DisplayMessage = "Success";
@@ -481,28 +480,28 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             var response = new ResponseDto<IEnumerable<CommunityMesaagesReponse>>();
             try
             {
-               
+
                 var messages = await _favoriteChannelMessageRepo.GetQueryable().
-                    Where(u=>u.UserId == userid).
-                    OrderBy(u=>u.Created).
-                    Select(u=> new CommunityMesaagesReponse
+                    Where(u => u.UserId == userid).
+                    OrderBy(u => u.Created).
+                    Select(u => new CommunityMesaagesReponse
                     {
                         Id = u.Message.Id,
-                        IsLiked = u.Message.ChannelMessageLikes.FirstOrDefault(u=>u.UserId == userid) != null,
+                        IsLiked = u.Message.ChannelMessageLikes.FirstOrDefault(u => u.UserId == userid) != null,
                         IsUnLiked = u.Message.ChannelMessageUnLikes.FirstOrDefault(u => u.UserId == userid) != null,
                         Message = u.Message.Message,
                         MessageType = u.Message.MessageType,
                         LikeCount = u.Message.ChannelMessageLikes.Count(),
                         UnLikeCount = u.Message.ChannelMessageUnLikes.Count(),
                         SentByImgUrl = u.Message.SentBy.ProfilePicture,
-                        SenderName = u.Message.SentBy.FirstName+ " "+ u.Message.SentBy.LastName,
+                        SenderName = u.Message.SentBy.FirstName + " " + u.Message.SentBy.LastName,
                         Created = u.Message.Created,
-                       IsSaved = u.Message.MessageFave.FirstOrDefault(u => u.UserId == userid) != null,
-                    } )
-                        
+                        IsSaved = u.Message.MessageFave.FirstOrDefault(u => u.UserId == userid) != null,
+                    })
+
                     .ToListAsync();
 
-               
+
                 response.Result = messages;
                 response.StatusCode = 200;
                 response.DisplayMessage = "Success";

@@ -22,5 +22,6 @@ namespace AlpaStock.Infrastructure.Service.Interface
         Task<ResponseDto<StockAnaResponse>> StockAnalyserResponse(StockAnalyserRequest req);
         Task<ResponseDto<string>> UpdateStockWishList(string stockwishlistId, decimal lowerLimit, decimal upperLimit);
         Task<ResponseDto<string>> DeleteStockWishList(string stockwishlistId);
+        Task<ResponseDto<StockAlphaResp>> StockAlphaRequest(string symbol, string period);
     }
 }
