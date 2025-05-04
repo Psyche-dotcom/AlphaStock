@@ -142,7 +142,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
 
                 }
                 var checkCurrent = await _channelMessageLikeRepo.GetQueryable().FirstOrDefaultAsync(u=>u.UserId == userid && u.MessageId == req.MessageId);
-                if (check != null)
+                if (checkCurrent != null)
                 {
                     _channelMessageLikeRepo.Delete(checkCurrent);
                     await _channelMessageLikeRepo.SaveChanges();
@@ -180,13 +180,15 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             var response = new ResponseDto<string>();
             try
             {
-                var check = await _favoriteChannelMessageRepo.GetQueryable().FirstOrDefaultAsync(u =>  u.Id == req.MessageId && u.UserId == userid);
+                var check = await _favoriteChannelMessageRepo.GetQueryable().FirstOrDefaultAsync(u =>  u.MessageId == req.MessageId && u.UserId == userid);
                 if (check != null)
                 {
-                    
-                    response.StatusCode = 400;
-                    response.DisplayMessage = "Error";
-                    response.ErrorMessages = new List<string>() { "Message already saved as favourite" };
+                    _favoriteChannelMessageRepo.Delete(check);
+                    await _channelMessageLikeRepo.SaveChanges();
+
+                    response.StatusCode = 200;
+                    response.DisplayMessage = "Success";
+                    response.Result = "Message Unsaved Successfully";
                     return response;
 
                 }
@@ -230,7 +232,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
 
                 }
                 var checkCurrent = await _ChannelMessageUnLikeRepo.GetQueryable().FirstOrDefaultAsync(u=>u.UserId == userid && u.MessageId == req.MessageId);
-                if (check != null)
+                if (checkCurrent != null)
                 {
                     _ChannelMessageUnLikeRepo.Delete(checkCurrent);
                     await _ChannelMessageUnLikeRepo.SaveChanges();

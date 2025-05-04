@@ -241,8 +241,6 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             }
         }
 
-
-
         public async Task<ResponseDto<string>> ResetPassword(ResetPassword resetPassword)
         {
             var response = new ResponseDto<string>();
