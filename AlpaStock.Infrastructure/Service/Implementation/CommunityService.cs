@@ -146,7 +146,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 {
                     _channelMessageLikeRepo.Delete(checkCurrent);
                     await _channelMessageLikeRepo.SaveChanges();
-                    response.StatusCode = 400;
+                    response.StatusCode = 200;
                     response.DisplayMessage = "Success";
                     response.Result = "Message like remove successfully";
                     return response;
@@ -236,7 +236,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 {
                     _ChannelMessageUnLikeRepo.Delete(checkCurrent);
                     await _ChannelMessageUnLikeRepo.SaveChanges();
-                    response.StatusCode = 400;
+                    response.StatusCode = 200;
                     response.DisplayMessage = "Success";
                     response.Result = "Message unlike remove successfully";
                     return response;
