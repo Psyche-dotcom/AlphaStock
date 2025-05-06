@@ -18,16 +18,19 @@ namespace AlpaStock.Infrastructure.Service.Implementation
         private readonly IConfiguration _configuration;
         private readonly string _baseUrl;
         private readonly IAlphaRepository<StockWishList> _stockWishRepo;
+        private readonly IAlphaRepository<UserSavePiller> _userSavePillerRepo;
         public StockService(ILogger<StockService> logger,
             IApiClient apiClient,
             IConfiguration configuration,
-            IAlphaRepository<StockWishList> stockWishRepo)
+            IAlphaRepository<StockWishList> stockWishRepo,
+            IAlphaRepository<UserSavePiller> userSavePillerRepo)
         {
             _logger = logger;
             _apiClient = apiClient;
             _configuration = configuration;
             _baseUrl = _configuration["FMP:BASEURL"];
             _stockWishRepo = stockWishRepo;
+            _userSavePillerRepo = userSavePillerRepo;
         }
         public async Task<ResponseDto<List<StockResp>>> GetStockQuote(string symbol)
         {
@@ -962,10 +965,6 @@ namespace AlpaStock.Infrastructure.Service.Implementation
 
                 var pe = CalculatePE(getQuote.Result[0].marketCap, (double)resultIncome[0].NetIncome);
                 var pfcf = CalculatePFCF(getQuote.Result[0].marketCap, CalculateFCF((long)resultCash[0].OperatingCashFlow, (long)resultCash[0].CapitalExpenditure));
-
-
-
-
                 double profitMargin = (double)(netIncome / revenue);
                 double revenueGrowth = CalculateYoYGrowth((double)resultIncome[0].Revenue, (double)resultIncome[1].Revenue);
 
@@ -1196,6 +1195,75 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 response.ErrorMessages = new List<string> { "Unable to formulate stock analysis at the moment" };
                 response.StatusCode = 500;
                 response.DisplayMessage = "Error";
+                return response;
+            }
+        }
+
+
+        public async Task<ResponseDto<string>> AddMyAlpha(string userid, List<MyAlphaReq> req)
+        {
+            var response = new ResponseDto<string>();
+            try
+            {
+                var check = await _userSavePillerRepo.GetQueryable().Where(u => u.Userid == userid).ToListAsync();
+                if (check.Any())
+                {
+                    _userSavePillerRepo.Delete(check);
+                    await _userSavePillerRepo.SaveChanges();
+                }
+                var saveData = new List<UserSavePiller>();
+                foreach (var piller in req)
+                {
+                    saveData.Add(new UserSavePiller()
+                    {
+                        Comparison = piller.Comparison,
+                        Format = piller.Format,
+                        PillerName = piller.PillerName,
+                        Userid = userid,
+                        Value = piller.Value,
+                    });
+                }
+                _userSavePillerRepo.AddRanges(saveData);
+               
+                await _userSavePillerRepo.SaveChanges();
+                response.StatusCode = 200;
+                response.DisplayMessage = "Success";
+                response.Result = "My Piller updated successfully";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+                response.DisplayMessage = "Error";
+                response.ErrorMessages = new List<string>() { "My Piller service not available" };
+                response.StatusCode = 400;
+                return response;
+            }
+        } 
+        public async Task<ResponseDto<List<MyAlphaReq>>> RetrieveMyAlpha(string userid)
+        {
+            var response = new ResponseDto<List<MyAlphaReq>>();
+            try
+            {
+                var check = await _userSavePillerRepo.GetQueryable().Where(u => u.Userid == userid).Select(u=> new MyAlphaReq
+                {
+                    Comparison = u.Comparison,
+                    Format = u.Format,
+                    PillerName = u.PillerName,
+                    Value = u.Value,
+                }).ToListAsync();
+               
+                response.StatusCode = 200;
+                response.DisplayMessage = "Success";
+                response.Result = check;
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+                response.DisplayMessage = "Error";
+                response.ErrorMessages = new List<string>() { "Retrieve My Piller service not available" };
+                response.StatusCode = 400;
                 return response;
             }
         }

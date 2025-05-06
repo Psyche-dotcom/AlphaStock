@@ -1,12 +1,12 @@
 ﻿using AlpaStock.Core.DTOs;
 using AlpaStock.Core.DTOs.Request.Stock;
 using AlpaStock.Core.DTOs.Response.Stock;
-using AlpaStock.Core.Entities;
 
 namespace AlpaStock.Infrastructure.Service.Interface
 {
     public interface IStockService
     {
+        Task<ResponseDto<string>> AddMyAlpha(string userid, List<MyAlphaReq> req);
         Task<ResponseDto<IEnumerable<StockSearchResp>>> SearchStock(string symbol);
         Task<ResponseDto<StockAnalyserResponse>> StockAnalyserRequest(string symbol, string period);
         Task<ResponseDto<FundamentalMetricData>> Metrics(string symbol, string period);
@@ -23,5 +23,6 @@ namespace AlpaStock.Infrastructure.Service.Interface
         Task<ResponseDto<string>> UpdateStockWishList(string stockwishlistId, decimal lowerLimit, decimal upperLimit);
         Task<ResponseDto<string>> DeleteStockWishList(string stockwishlistId);
         Task<ResponseDto<StockAlphaResp>> StockAlphaRequest(string symbol, string period);
+        Task<ResponseDto<List<MyAlphaReq>>> RetrieveMyAlpha(string userid);
     }
 }

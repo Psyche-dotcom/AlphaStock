@@ -12,6 +12,7 @@ namespace AlpaStock.Core.Context
         public DbSet<UserSubscription> UserSubscriptions { get; set; }
         public DbSet<SubscriptionFeatures> SubscriptionFeatures { get; set; }
         public DbSet<Payments> Payments { get; set; }
+        public DbSet<UserSavePiller> UserSavePillers { get; set; }
         public DbSet<StockWishList> StockWishLists { get; set; }
         public DbSet<BlogPost> BlogPosts { get; set; }
         public DbSet<BlogPostLike> BlogPostLikes { get; set; }

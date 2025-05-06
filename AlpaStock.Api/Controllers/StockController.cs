@@ -57,14 +57,14 @@ namespace AlpaStock.Api.Controllers
             {
                 return BadRequest(result);
             }
-        
+
         }
 
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpPut("update-wishlist")]
         public async Task<IActionResult> UpdateWishListAsync(UpdateStockWishlistReq req)
         {
-           
+
             var result = await _stockService.UpdateStockWishList(req.StockwishlistId, req.LowerLimit, req.UpperLimit);
 
             if (result.StatusCode == 200 || result.StatusCode == 201)
@@ -162,7 +162,7 @@ namespace AlpaStock.Api.Controllers
             {
                 return BadRequest(result);
             }
-        } 
+        }
         [HttpGet("search")]
         public async Task<IActionResult> SearchStockAsync(string symbol)
         {
@@ -256,7 +256,7 @@ namespace AlpaStock.Api.Controllers
                 return BadRequest(result);
             }
         }
-       [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet("fundamental-metric")]
         public async Task<IActionResult> FundamentalMetricDatas(string symbol, string period)
         {
@@ -274,8 +274,8 @@ namespace AlpaStock.Api.Controllers
             {
                 return BadRequest(result);
             }
-        } 
-       [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        }
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet("stock-analyer-stats")]
         public async Task<IActionResult> StockAnalyzerStats(string symbol, string period)
         {
@@ -293,7 +293,7 @@ namespace AlpaStock.Api.Controllers
             {
                 return BadRequest(result);
             }
-        } 
+        }
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet("stock-alpha-stats")]
         public async Task<IActionResult> StockAlphaStats(string symbol, string period)
@@ -312,7 +312,7 @@ namespace AlpaStock.Api.Controllers
             {
                 return BadRequest(result);
             }
-        }  
+        }
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpPost("stock-analyer-stats/predict")]
         public async Task<IActionResult> StockAnalyzerStatsPredict(StockAnalyserRequest request)
@@ -332,13 +332,12 @@ namespace AlpaStock.Api.Controllers
                 return BadRequest(result);
             }
         }
-        
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        [HttpPost("stock-analyer-stats/predict/hisory")]
-        public async Task<IActionResult> StockAnalyzerStatsPredictHistory(StockAnalysisHisotry request)
+        [HttpPost("mypiller/update")]
+        public async Task<IActionResult> UpdateMyPiler(List<MyAlphaReq> request)
         {
-            return Ok();
-           /* var result = await _stockService.StockAnalyserResponse(request);
+            var userid = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Jti)?.Value;
+            var result = await _stockService.AddMyAlpha(userid, request);
 
             if (result.StatusCode == 200 || result.StatusCode == 201)
             {
@@ -351,7 +350,48 @@ namespace AlpaStock.Api.Controllers
             else
             {
                 return BadRequest(result);
-            }*/
+            }
+        }
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpGet("mypiller/current")]
+        public async Task<IActionResult> RetrieveMyCurrentAlpha()
+        {
+            var userid = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Jti)?.Value;
+
+            var result = await _stockService.RetrieveMyAlpha(userid);
+
+            if (result.StatusCode == 200 || result.StatusCode == 201)
+            {
+                return Ok(result);
+            }
+            else if (result.StatusCode == 404)
+            {
+                return NotFound(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+        }
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpPost("stock-analyer-stats/predict/hisory")]
+        public async Task<IActionResult> StockAnalyzerStatsPredictHistory(StockAnalysisHisotry request)
+        {
+            return Ok();
+            /* var result = await _stockService.StockAnalyserResponse(request);
+
+             if (result.StatusCode == 200 || result.StatusCode == 201)
+             {
+                 return Ok(result);
+             }
+             else if (result.StatusCode == 404)
+             {
+                 return NotFound(result);
+             }
+             else
+             {
+                 return BadRequest(result);
+             }*/
         }
     }
 

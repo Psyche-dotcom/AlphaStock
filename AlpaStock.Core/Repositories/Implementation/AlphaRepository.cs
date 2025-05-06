@@ -18,6 +18,11 @@ namespace AlpaStock.Core.Repositories.Implementation
         {
             var result = await _context.Set<TEntity>().AddAsync(entity);
             return result.Entity;
+        }   
+        public async Task AddRanges(List<TEntity> entity)
+        {
+             await _context.Set<TEntity>().AddRangeAsync(entity);
+            
         }
 
         public void Delete(TEntity entity)

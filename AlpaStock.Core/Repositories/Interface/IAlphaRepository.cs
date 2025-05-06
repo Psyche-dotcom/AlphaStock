@@ -8,6 +8,7 @@
         void Delete(List<TEntity> entity);
         void Update(TEntity entity);
         void Delete(TEntity entity);
+        Task AddRanges(List<TEntity> entity);
         Task<int> SaveChanges();
     }
 }
