@@ -425,6 +425,41 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 response.StatusCode = 400;
                 return response;
             }
+        }  public async Task<ResponseDto<ChannelMesageReply>> AddMessageReply(string MessageId, string message, string messageType, string sentById)
+        {
+            var response = new ResponseDto<ChannelMesageReply>();
+            try
+            {
+                var check = await _communityChannelMessageRepo.GetQueryable().FirstOrDefaultAsync(u => u.Id == MessageId);
+                if (check == null)
+                {
+                    response.DisplayMessage = "Error";
+                    response.StatusCode = 400;
+                    response.ErrorMessages = new List<string>() { "invalid Channel name" };
+                    return response;
+                }
+                var result = await _channelMesageReplyRepo.Add(new ChannelMesageReply()
+                {
+                    ChannelMessageId = check.Id,
+                    Message = message,
+                    MessageType = messageType,
+                    SentById = sentById,
+                });
+
+                await _communityChannelMessageRepo.SaveChanges();
+                response.StatusCode = 200;
+                response.DisplayMessage = "Success";
+                response.Result = result;
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+                response.DisplayMessage = "Error";
+                response.ErrorMessages = new List<string>() { "message reply not sent successfully" };
+                response.StatusCode = 400;
+                return response;
+            }
         }
         public async Task<ResponseDto<IEnumerable<CommunityMesaagesReponse>>> RetrieveChannelMessages(string roomId, string userid)
         {
@@ -534,6 +569,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                         MessageType = r.MessageType,
                         SentByImgUrl = r.SentBy.ProfilePicture,
                         SenderName = r.SentBy.FirstName + " " + r.SentBy.LastName,
+                        Created= r.Created
                     }).ToListAsync();
                 response.Result = messages;
                 response.StatusCode = 200;

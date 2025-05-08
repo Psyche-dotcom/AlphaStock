@@ -21,5 +21,6 @@ namespace AlpaStock.Infrastructure.Service.Interface
         Task<ResponseDto<string>> MessageUnLike(LikeReq req, string userid);
         Task<ResponseDto<string>> SaveMessageToFAV(LikeReq req, string userid);
         Task<ResponseDto<IEnumerable<CommunityMesaagesReply>>> RetrieveChannelMessagesReply(string messageid);
+        Task<ResponseDto<ChannelMesageReply>> AddMessageReply(string MessageId, string message, string messageType, string sentById);
     }
 }

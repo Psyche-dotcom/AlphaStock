@@ -27,6 +27,24 @@ namespace AlpaStock.Infrastructure.SignalRHub
         {
             if (isReply)
             {
+                var retrieveUserInfo = await _accountRepo.FindUserByIdAsync(sentById);
+                var delivery = await _communityService.AddMessageReply(roomId, message, messageType, sentById);
+                if (delivery.StatusCode == 200 && retrieveUserInfo != null)
+                {
+                    var messageDto = new
+                    {
+                        RoomId = roomId,
+                        Message = message,
+                        MessageType = messageType,
+                        SentByImgUrl = retrieveUserInfo.ProfilePicture,
+                        SenderName = retrieveUserInfo.FirstName + " " + retrieveUserInfo.LastName,
+                        Created = delivery.Result.Created,
+                        Id = delivery.Result.Id,
+                        isReply = isReply
+
+                    };
+                    await Clients.Group(roomId).SendAsync("ReceiveChannelMessage", messageDto);
+                }
 
             }
             else
@@ -44,7 +62,8 @@ namespace AlpaStock.Infrastructure.SignalRHub
                         SentByImgUrl = retrieveUserInfo.ProfilePicture,
                         SenderName = retrieveUserInfo.FirstName + " " + retrieveUserInfo.LastName,
                         Created= delivery.Result.Created,
-                        Id = delivery.Result.Id
+                        Id = delivery.Result.Id,
+                          isReply = isReply
 
                     };
                     await Clients.Group(roomId).SendAsync("ReceiveChannelMessage", messageDto);

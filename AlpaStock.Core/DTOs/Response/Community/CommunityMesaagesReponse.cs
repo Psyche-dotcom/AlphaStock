@@ -24,5 +24,6 @@
         public string MessageType { get; set; }
         public string SentByImgUrl { get; set; }
         public string SenderName { get; set; }
+        public DateTime Created { get; set; }
     }
 }
