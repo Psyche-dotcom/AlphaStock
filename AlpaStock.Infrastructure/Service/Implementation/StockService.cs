@@ -1101,7 +1101,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
 
             try
             {
-                var apiUrlIcome = _baseUrl + $"stable/income-statement?symbol={req.symbol}&period=annual&limit=1";
+                var apiUrlIcome = _baseUrl + $"stable/income-statement-ttm?symbol={req.symbol}&period=annual&limit=1";
                 var makeRequestIncome = await _apiClient.GetAsync<string>(apiUrlIcome);
                 if (!makeRequestIncome.IsSuccessful)
                 {
@@ -1135,9 +1135,9 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 double futureNetIcomeMid = futureRevMid * (req.ProfitMargin.mid / 100);
                 double futureNetIcomeHigh = futureRevHigh * (req.ProfitMargin.High / 100);
 
-                double futureMarketCapLow = futureNetIcomeLow * (req.PERatio.low / 100);
-                double futureMarketCapMid = futureNetIcomeMid * (req.PERatio.mid / 100);
-                double futureMarketCapHigh = futureNetIcomeHigh * (req.PERatio.High / 100);
+                double futureMarketCapLow = futureNetIcomeLow * (req.PERatio.low);
+                double futureMarketCapMid = futureNetIcomeMid * (req.PERatio.mid);
+                double futureMarketCapHigh = futureNetIcomeHigh * (req.PERatio.High);
 
 
                 double presentValueMarketCapLow = futureMarketCapLow / Math.Pow(1 + (req.DesiredAnnReturn.low / 100), req.years);
@@ -1162,9 +1162,9 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 double futureFreeCashFlowMid = futureRevMid * (req.FreeCashFlowMargin.mid / 100);
                 double futureFreeCashFlowHigh = futureRevHigh * (req.FreeCashFlowMargin.High / 100);
 
-                double futureMarketCapCashFlowLow = futureFreeCashFlowLow * (req.PFCF.low / 100);
-                double futurMarketCapCashFlowMid = futureFreeCashFlowMid * (req.PFCF.mid / 100);
-                double futureMarketCapCashFlowHigh = futureFreeCashFlowHigh * (req.PFCF.High / 100);
+                double futureMarketCapCashFlowLow = futureFreeCashFlowLow * (req.PFCF.low);
+                double futurMarketCapCashFlowMid = futureFreeCashFlowMid * (req.PFCF.mid);
+                double futureMarketCapCashFlowHigh = futureFreeCashFlowHigh * (req.PFCF.High);
 
                 double presentValueMarketCapCashFlowLow = futureMarketCapCashFlowLow / Math.Pow(1 + (req.DesiredAnnReturn.low / 100), req.years);
                 double presentValueMarketCapCashFlowMid = futurMarketCapCashFlowMid / Math.Pow(1 + (req.DesiredAnnReturn.mid / 100), req.years);
