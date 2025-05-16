@@ -598,7 +598,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     response.ErrorMessages = new List<string>() { "Unable to get the stock ratios-ttm" };
                     return response;
                 }
-                var resultRatioTTM = JsonConvert.DeserializeObject<IEnumerable<RatioTTMResp>>(makeRequestRatioTTM.Content);
+                var resultRatioTTM = JsonConvert.DeserializeObject<List<RatioTTMResp>>(makeRequestRatioTTM.Content);
                 if (!resultRatioTTM.Any())
                 {
                     response.StatusCode = 400;
@@ -607,30 +607,96 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     return response;
                 }
 
+
+                var apiUrlIcome = _baseUrl + $"stable/income-statement-ttm?symbol={symbol}&period={period}&limit=5";
+                var makeRequestIncome = await _apiClient.GetAsync<string>(apiUrlIcome);
+                if (!makeRequestIncome.IsSuccessful)
+                {
+                    _logger.LogError("stock income statement error mess", makeRequestIncome.ErrorMessage);
+                    _logger.LogError("stock income statement error ex", makeRequestIncome.ErrorException);
+                    _logger.LogError("stock income statement error con", makeRequestIncome.Content);
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Unable to get the stock Income statement" };
+                    return response;
+                }
+                var resultIncome = JsonConvert.DeserializeObject<List<IncomeStatementResp>>(makeRequestIncome.Content);
+
+
+                var apiUrlCash = _baseUrl + $"stable/cash-flow-statement-ttm?symbol={symbol}&period={period}&limit=5";
+                var makeRequestCash = await _apiClient.GetAsync<string>(apiUrlCash);
+                if (!makeRequestCash.IsSuccessful)
+                {
+                    _logger.LogError("stock cash-flow-statement error mess", makeRequestCash.ErrorMessage);
+                    _logger.LogError("stock cash-flow-statement error ex", makeRequestCash.ErrorException);
+                    _logger.LogError("stock cash-flow-statement error con", makeRequestCash.Content);
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Unable to get the stock cash flow statement" };
+                    return response;
+                }
+
+
+                var resultCash = JsonConvert.DeserializeObject<List<CashFlowStatement>>(makeRequestCash.Content); 
+               
+                var apiUrlGrowth = _baseUrl + $"stable/income-statement-growth?symbol={symbol}&period={period}&limit=10";
+                var makeGrowthRequest = await _apiClient.GetAsync<string>(apiUrlGrowth);
+                if (!makeGrowthRequest.IsSuccessful)
+                {
+                    _logger.LogError("stock income-growth error mess", makeRequestCash.ErrorMessage);
+                    _logger.LogError("stock income-growth error ex", makeRequestCash.ErrorException);
+                    _logger.LogError("stock  income-growth error con", makeRequestCash.Content);
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Unable to get the stock cash flow statement" };
+                    return response;
+                }
+
+
+                var resultGrowth = JsonConvert.DeserializeObject<List<FinancialGrowth>>(makeGrowthRequest.Content);
+
+
+
+
+
+
+
+                metricFirst.ProfitMarginTTM = resultRatioTTM[0].NetProfitMarginTTM.ToString() + "%";
+                metricFirst.AvgProfitMargin5yrs = ((resultRatio[0].NetProfitMargin + resultRatio[1].NetProfitMargin + resultRatio[2].NetProfitMargin + resultRatio[3].NetProfitMargin + resultRatio[4].NetProfitMargin) / 5).ToString() + "%";
+                metricFirst.RevenueTTM = resultIncome[0].Revenue.ToString();
+                metricFirst.NetIcomeTTM = resultIncome[0].NetIncome.ToString();
+                var netincome5yearsAvg = ((resultIncome[0].NetIncome + resultIncome[1].NetIncome + resultIncome[2].NetIncome + resultIncome[3].NetIncome + resultIncome[4].NetIncome) / 5);
+                metricFirst.NetIcomeTTM5year = netincome5yearsAvg.ToString();
                 metricFirst.RevenuePerShare = resultRatio[0].RevenuePerShare.ToString();
-                metricFirst.PToERatio = resultRatio[0].PriceToEarningsRatio.ToString();
-                metricFirst.PToERatioFive5yrs = resultRatio[4].PriceToEarningsRatio.ToString();
-                metricFirst.PSRatio = resultRatio[0].PriceToSalesRatio.ToString();
+                metricFirst.PToERatioTTM = resultRatioTTM[0].PriceToEarningsRatioTTM.ToString();
+                metricFirst.PToEAvgNetIncomeFive5yrs = (result[0].MarketCap / netincome5yearsAvg).ToString();
+                metricFirst.PSRatioTTM = resultRatioTTM[0].PriceToSalesRatioTTM.ToString();
                 metricFirst.PSRatioFive5yrs = resultRatio[4].PriceToSalesRatio.ToString();
-                metricFirst.GrossProfitMargin = resultRatio[0].GrossProfitMargin.ToString();
+                metricFirst.GrossProfitMarginTTM = resultRatioTTM[0].GrossProfitMarginTTM.ToString() + "%";
 
 
                 metricSecond.EnterpriseValue = result[0].EnterpriseValue.ToString();
+                metricSecond.EVToNet = (result[0].EnterpriseValue / resultIncome[0].NetIncome).ToString();
                 metricSecond.EV5YEARS = result[4].EnterpriseValue.ToString();
                 metricSecond.EVToSales = result[0].EvToSales.ToString();
                 metricSecond.EVToSales5yrs = result[4].EvToSales.ToString();
                 metricSecond.EVToFCF5yrs = result[4].EvToFreeCashFlow.ToString();
                 metricSecond.EVToFCF = result[0].EvToFreeCashFlow.ToString();
-                metricSecond.FreeCashFlowYield = result[0].FreeCashFlowYield.ToString();
-                metricSecond.FiveYearAvgFreeCashFlowYield = result[4].FreeCashFlowYield.ToString();
-                metricSecond.DividendsYieldTTM = resultRatio[0].DividendYield.ToString();
+                metricSecond.FreeCashFlow = resultCash[0].FreeCashFlow.ToString();
+                metricSecond.PriceToFCFTTM = (result[0].MarketCap / resultCash[0].FreeCashFlow).ToString();
+                metricSecond.AvgFCF5Yrs = ((resultCash[0].FreeCashFlow + resultCash[1].FreeCashFlow + resultCash[2].FreeCashFlow + resultCash[3].FreeCashFlow + resultCash[4].FreeCashFlow) / 5).ToString();
+                metricSecond.DividendsYieldTTM = resultRatioTTM[0].DividendYieldTTM.ToString() + "%";
                 metricSecond.FCFTTMTOEQUITYTTM = resultTTM[0].FreeCashFlowToEquityTTM.ToString();
 
 
 
-                metricThird.ReturnOnAsset = result[0].ReturnOnAssets.ToString();
-                metricThird.ReturnOnEquity = result[0].ReturnOnEquity.ToString();
-                metricThird.ReturnOnInvestedCapitalTTM = resultTTM[0].ReturnOnInvestedCapitalTTM.ToString();
+                metricThird.ReturnOnAsset = result[0].ReturnOnAssets.ToString() + "%";
+                metricThird.CompRevGrowth3yrs = resultGrowth[2].GrowthRevenue.ToString() + "%";
+                metricThird.CompRevGrowth5yrs = resultGrowth[4].GrowthRevenue.ToString() + "%";
+                metricThird.CompRevGrowth10yrs = resultGrowth[9].GrowthRevenue.ToString() + "%";
+                metricThird.PriceToBookRatio = resultRatio[0].PriceToBookRatio.ToString();
+                metricThird.ReturnOnInvestedCapitalTTM = resultTTM[0].ReturnOnInvestedCapitalTTM.ToString() + "%";
+                metricThird.AvgROIC5yrs = ((result[0].ReturnOnInvestedCapital + result[1].ReturnOnInvestedCapital + result[2].ReturnOnInvestedCapital + result[3].ReturnOnInvestedCapital + result[4].ReturnOnInvestedCapital) / 5).ToString() + "%";
                 metricThird.ADayHigh = getQuote.Result[0].dayHigh.ToString();
                 metricThird.ADaylow = getQuote.Result[0].dayLow.ToString();
                 metricThird.AYearHigh = getQuote.Result[0].yearHigh.ToString();
@@ -980,7 +1046,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
 
 
                 Weighted.First = $"{latestIncomeStatement.WeightedAverageShsOut:F2}";
-                NetIcome.First = $"{latestIncomeStatement.NetIncome:F2}"; 
+                NetIcome.First = $"{latestIncomeStatement.NetIncome:F2}";
                 ROIC.First = $"{roics[0]:F2}%";
                 RevenueGrowth.First = revenueGrowth.ToString() + "%";
                 ProfitMargin.First = (profitMargin * 100).ToString() + "%";
@@ -1044,10 +1110,10 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     FreeCashFlowMargin = FreeCashFlowMargin,
                     PFCF = PFCF,
                     ProfitMargin = ProfitMargin,
-                    MarketCap=  $"{getQuote.Result[0].marketCap:F2}",
-                    AverageShareOutstanding=Weighted,
+                    MarketCap = $"{getQuote.Result[0].marketCap:F2}",
+                    AverageShareOutstanding = Weighted,
                     NetIcome = NetIcome,
-                   
+
 
                 };
                 return response;
@@ -1062,9 +1128,6 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 return response;
             }
         }
-
-
-
 
         private double CalculateYoYGrowth(double current, double previous)
         {
@@ -1224,7 +1287,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     });
                 }
                 _userSavePillerRepo.AddRanges(saveData);
-               
+
                 await _userSavePillerRepo.SaveChanges();
                 response.StatusCode = 200;
                 response.DisplayMessage = "Success";
@@ -1239,20 +1302,20 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 response.StatusCode = 400;
                 return response;
             }
-        } 
+        }
         public async Task<ResponseDto<List<MyAlphaReq>>> RetrieveMyAlpha(string userid)
         {
             var response = new ResponseDto<List<MyAlphaReq>>();
             try
             {
-                var check = await _userSavePillerRepo.GetQueryable().Where(u => u.Userid == userid).Select(u=> new MyAlphaReq
+                var check = await _userSavePillerRepo.GetQueryable().Where(u => u.Userid == userid).Select(u => new MyAlphaReq
                 {
                     Comparison = u.Comparison,
                     Format = u.Format,
                     PillerName = u.PillerName,
                     Value = u.Value,
                 }).ToListAsync();
-               
+
                 response.StatusCode = 200;
                 response.DisplayMessage = "Success";
                 response.Result = check;

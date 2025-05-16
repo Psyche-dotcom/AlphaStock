@@ -256,6 +256,7 @@ namespace AlpaStock.Api.Controllers
                 return BadRequest(result);
             }
         }
+        [AllowAnonymous]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet("fundamental-metric")]
         public async Task<IActionResult> FundamentalMetricDatas(string symbol, string period)

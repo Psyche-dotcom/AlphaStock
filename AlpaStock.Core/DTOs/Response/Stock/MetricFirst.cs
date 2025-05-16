@@ -2,13 +2,18 @@
 {
     public class MetricFirst
     {
-        public string RevenuePerShare { get; set; }
+        public string RevenueTTM { get; set; }
+        public string NetIcomeTTM { get; set; }
+        public string NetIcomeTTM5year { get; set; }
    
-        public string PToERatioFive5yrs { get; set; }
-        public string PToERatio { get; set; }
-        public string PSRatio { get; set; }
+        public string PToERatioTTM { get; set; }
+        public string PToEAvgNetIncomeFive5yrs { get; set; }
+        public string PSRatioTTM { get; set; }
         public string PSRatioFive5yrs { get; set; }
+        public string RevenuePerShare { get; set; }
+        public string ProfitMarginTTM { get; set; }
+        public string AvgProfitMargin5yrs { get; set; }
   
-        public string GrossProfitMargin { get; set; }
+        public string GrossProfitMarginTTM { get; set; }
     }
 }
