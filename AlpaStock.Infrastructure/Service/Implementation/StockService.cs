@@ -196,9 +196,9 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 return response;
             }
         }
-        public async Task<ResponseDto<IEnumerable<CashFlowStatement>>> GetStockCashFlowStatement(string symbol, string period)
+        public async Task<ResponseDto<List<CashFlowStatement>>> GetStockCashFlowStatement(string symbol, string period)
         {
-            var response = new ResponseDto<IEnumerable<CashFlowStatement>>();
+            var response = new ResponseDto<List<CashFlowStatement>>();
             try
             {
 
@@ -214,7 +214,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     response.ErrorMessages = new List<string>() { "Unable to get the stock cash flow statement" };
                     return response;
                 }
-                var resultCash = JsonConvert.DeserializeObject<IEnumerable<CashFlowStatement>>(makeRequestCash.Content);
+                var resultCash = JsonConvert.DeserializeObject<List<CashFlowStatement>>(makeRequestCash.Content);
                 if (!resultCash.Any())
                 {
                     response.StatusCode = 400;
@@ -289,7 +289,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             try
             {
 
-                var apiUrl = _baseUrl + $"stable/search-symbol?query={symbol}&limit=20";
+                var apiUrl = _baseUrl + $"stable/search-name?query={symbol}&limit=20";
                 var makeRequest = await _apiClient.GetAsync<string>(apiUrl);
                 if (!makeRequest.IsSuccessful)
                 {
@@ -637,8 +637,8 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 }
 
 
-                var resultCash = JsonConvert.DeserializeObject<List<CashFlowStatement>>(makeRequestCash.Content); 
-               
+                var resultCash = JsonConvert.DeserializeObject<List<CashFlowStatement>>(makeRequestCash.Content);
+
                 var apiUrlGrowth = _baseUrl + $"stable/income-statement-growth?symbol={symbol}&period={period}&limit=10";
                 var makeGrowthRequest = await _apiClient.GetAsync<string>(apiUrlGrowth);
                 if (!makeGrowthRequest.IsSuccessful)
@@ -651,16 +651,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     response.ErrorMessages = new List<string>() { "Unable to get the stock cash flow statement" };
                     return response;
                 }
-
-
                 var resultGrowth = JsonConvert.DeserializeObject<List<FinancialGrowth>>(makeGrowthRequest.Content);
-
-
-
-
-
-
-
                 metricFirst.ProfitMarginTTM = resultRatioTTM[0].NetProfitMarginTTM.ToString() + "%";
                 metricFirst.AvgProfitMargin5yrs = ((resultRatio[0].NetProfitMargin + resultRatio[1].NetProfitMargin + resultRatio[2].NetProfitMargin + resultRatio[3].NetProfitMargin + resultRatio[4].NetProfitMargin) / 5).ToString() + "%";
                 metricFirst.RevenueTTM = resultIncome[0].Revenue.ToString();
@@ -848,7 +839,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 var PFCF = new PFCF();
 
                 ROIC.First = $"{roics[0]:F2}%";
-                RevenueGrowth.First = revenueGrowth.ToString() + "%";
+                RevenueGrowth.First = $"{revenueGrowth:F2}" + "%";
                 ProfitMargin.First = (profitMargin * 100).ToString() + "%";
                 FreeCashFlowMargin.First = $"{fcfMargins[0]:F2}%";
                 PERatio.First = $"{pe:F2}";
@@ -872,7 +863,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
 
 
                 ROIC.Fifth = $"{roics.Take(5).Average():F2}%";
-                RevenueGrowth.Fifth = revenueGrowth1.ToString();
+                RevenueGrowth.Fifth = $"{revenueGrowth1:F2}" + "%"; ;
                 ProfitMargin.Fifth = (profitMargin1 * 100).ToString();
                 FreeCashFlowMargin.Fifth = $"{fcfMargins.Take(5).Average():F2}%";
 
@@ -893,7 +884,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
 
 
                 ROIC.Ten = $"{roics.Take(10).Average():F2}%";
-                RevenueGrowth.Ten = revenueGrowth2.ToString();
+                RevenueGrowth.Ten = $"{revenueGrowth2:F2}" + "%";
                 ProfitMargin.Ten = (profitMargin2 * 100).ToString();
                 FreeCashFlowMargin.Ten = $"{fcfMargins.Take(10).Average():F2}%";
 
@@ -921,6 +912,146 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 return response;
             }
         }
+
+        public async Task<ResponseDto<IEnumerable<Alpha8PillerResp>>> AlphaStock8Pillers(string symbol, string period)
+        {
+            var response = new ResponseDto<IEnumerable<Alpha8PillerResp>>();
+            try
+            {
+                var resp = new List<Alpha8PillerResp>();
+                var apiUrlIcome = _baseUrl + $"stable/income-statement?symbol={symbol}&period={period}&limit=5";
+                var makeRequestIncome = await _apiClient.GetAsync<string>(apiUrlIcome);
+                if (!makeRequestIncome.IsSuccessful)
+                {
+                    _logger.LogError("stock income statement error mess", makeRequestIncome.ErrorMessage);
+                    _logger.LogError("stock income statement error ex", makeRequestIncome.ErrorException);
+                    _logger.LogError("stock income statement error con", makeRequestIncome.Content);
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Unable to get the stock Income statement" };
+                    return response;
+                }
+                var resultIncome = JsonConvert.DeserializeObject<List<IncomeStatementResp>>(makeRequestIncome.Content);
+
+                var netincome5yearsAvg = ((resultIncome[0].NetIncome + resultIncome[1].NetIncome + resultIncome[2].NetIncome + resultIncome[3].NetIncome + resultIncome[4].NetIncome) / 5);
+                resp.Add(new Alpha8PillerResp()
+                {
+                    header = "P/E Avg Net Income (5 yr) < 22B",
+                    amount = FormatNumber((double)netincome5yearsAvg),
+                    isActive = Compare("22B", (double)netincome5yearsAvg, ">")
+                });
+                resp.Add(new Alpha8PillerResp()
+                {
+                    header = "Net Income Growth (5 yr)",
+                    amount = FormatNumber((double)resultIncome[0].NetIncome),
+                    isActive = Compare(resultIncome[0].NetIncome.ToString(), (double)resultIncome[4].NetIncome, ">")
+                });
+                var getStockAnalyzer = await StockAnalyserRequest(symbol, period);
+                if (getStockAnalyzer.StatusCode != 200)
+                {
+
+                    response.StatusCode = getStockAnalyzer.StatusCode;
+                    response.DisplayMessage = getStockAnalyzer.DisplayMessage;
+                    response.ErrorMessages = getStockAnalyzer.ErrorMessages;
+                    return response;
+                }
+                resp.Add(new Alpha8PillerResp()
+                {
+                    header = "Avg ROIC (5 yr) > 10%",
+                    amount = getStockAnalyzer.Result.ROIC.Fifth,
+                    isActive = Compare2(getStockAnalyzer.Result.ROIC.Fifth, "10%", ">")
+                });
+                resp.Add(new Alpha8PillerResp()
+                {
+                    header = "Revenue Growth (5 yr)",
+                    amount = getStockAnalyzer.Result.RevGrowth.First,
+                    isActive = Compare2(getStockAnalyzer.Result.RevGrowth.First,getStockAnalyzer.Result.RevGrowth.Fifth, ">")
+                });
+
+                var apiUrlIcome2 = _baseUrl + $"stable/income-statement-ttm?symbol={symbol}&period={period}&limit=5";
+                var makeRequestIncome2 = await _apiClient.GetAsync<string>(apiUrlIcome2);
+                if (!makeRequestIncome2.IsSuccessful)
+                {
+                    _logger.LogError("stock income statement error mess", makeRequestIncome2.ErrorMessage);
+                    _logger.LogError("stock income statement error ex", makeRequestIncome2.ErrorException);
+                    _logger.LogError("stock income statement error con", makeRequestIncome2.Content);
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Unable to get the stock Income statement" };
+                    return response;
+                }
+                var resultIncome2 = JsonConvert.DeserializeObject<List<IncomeStatementResp>>(makeRequestIncome2.Content);
+                resp.Add(new Alpha8PillerResp()
+                {
+                    header = "Shares Outstanding Decrease (5 yr)",
+                    amount = FormatNumber(double.Parse(resultIncome2[0].WeightedAverageShsOutDil.ToString())),
+                    isActive = Compare(resultIncome2[0].WeightedAverageShsOutDil.ToString(), double.Parse(resultIncome[0].WeightedAverageShsOutDil.ToString()), "<")
+                });
+
+                var apiUrlBalanceTtm = _baseUrl + $"stable/balance-sheet-statement-ttm?symbol={symbol}&period={period}&limit=10";
+                var makeRequestBalanceTTm = await _apiClient.GetAsync<string>(apiUrlBalanceTtm);
+                if (!makeRequestBalanceTTm.IsSuccessful)
+                {
+                    _logger.LogError("stock balance-sheet-statement error mess", makeRequestBalanceTTm.ErrorMessage);
+                    _logger.LogError("stock balance-sheet-statement error ex", makeRequestBalanceTTm.ErrorException);
+                    _logger.LogError("stock balance-sheet-statement error con", makeRequestBalanceTTm.Content);
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Unable to get the stock balance sheet statement" };
+                    return response;
+                }
+                var resultBalanceTTM = JsonConvert.DeserializeObject<List<BalanceSheetResp>>(makeRequestBalanceTTm.Content);
+                var cashflow = await GetStockCashFlowStatement(symbol, period);
+                if (cashflow.StatusCode != 200)
+                {
+
+                    response.StatusCode = cashflow.StatusCode;
+                    response.DisplayMessage = cashflow.DisplayMessage;
+                    response.ErrorMessages = cashflow.ErrorMessages;
+                    return response;
+                }
+                var avgCashflow = ((cashflow.Result[0].FreeCashFlow + 
+                    cashflow.Result[1].FreeCashFlow + 
+                    cashflow.Result[2].FreeCashFlow +
+                    cashflow.Result[3].FreeCashFlow + 
+                    cashflow.Result[4].FreeCashFlow) / 5);
+                var ltl = resultBalanceTTM[0].TotalCurrentLiabilities / avgCashflow;
+                resp.Add(new Alpha8PillerResp()
+                {
+                    header = "LTL/Avg FCF (5 yr) < 5",
+                    amount = ltl.ToString(),
+                    isActive = Compare(ltl.ToString(), 5, "<")
+                });
+                resp.Add(new Alpha8PillerResp()
+                {
+                    header = "FCF Growth (5 yr)",
+                    amount =FormatNumber((double)cashflow.Result[0].FreeCashFlow),
+                    isActive = Compare(cashflow.Result[0].FreeCashFlow.ToString(),(double) cashflow.Result[4].FreeCashFlow, ">")
+                }); 
+                resp.Add(new Alpha8PillerResp()
+                {
+                    header = "P/FCF Avg FCF (5 yr) < 22",
+                    amount = FormatNumber((double)avgCashflow),
+                    isActive = Compare("22B", (double)avgCashflow, ">")
+                });
+
+              
+                response.StatusCode = 200;
+                response.DisplayMessage = "Success";
+                response.Result = resp;
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+                response.DisplayMessage = "Error";
+                response.ErrorMessages = new List<string>() { "Get Alpha 8 piller service not available" };
+                response.StatusCode = 400;
+                return response;
+            }
+        }
+
+
 
 
         public async Task<ResponseDto<StockAlphaResp>> StockAlphaRequest(string symbol, string period)
@@ -1156,7 +1287,128 @@ namespace AlpaStock.Infrastructure.Service.Implementation
         public double CalculatePFCF(double marketCap, double fcf)
             => marketCap / fcf;
 
+        public bool Compare(string formattedValue, double rawValue, string comparison)
+        {
+            double parsedFormattedValue = ParseFormattedValue(formattedValue);
 
+            return comparison switch
+            {
+                ">" => parsedFormattedValue > rawValue,
+                "<" => parsedFormattedValue < rawValue,
+                ">=" => parsedFormattedValue >= rawValue,
+                "<=" => parsedFormattedValue <= rawValue,
+                "==" => parsedFormattedValue == rawValue,
+                "!=" => parsedFormattedValue != rawValue,
+                _ => throw new ArgumentException("Invalid comparison operator. Use: >, <, >=, <=, ==, !=")
+            };
+        }
+        public bool Compare2(string formattedValue, string rawValueStr, string comparison)
+        {
+            double leftValue = ParseFormattedValue2(formattedValue);
+            double rightValue = ParseFormattedValue2(rawValueStr);
+
+            return comparison switch
+            {
+                ">" => leftValue > rightValue,
+                "<" => leftValue < rightValue,
+                ">=" => leftValue >= rightValue,
+                "<=" => leftValue <= rightValue,
+                "==" => leftValue == rightValue,
+                "!=" => leftValue != rightValue,
+                _ => throw new ArgumentException("Invalid comparison operator. Use: >, <, >=, <=, ==, !=")
+            };
+        }
+
+        private double ParseFormattedValue2(string value)
+        {
+            value = value.Trim();
+
+            if (value.EndsWith("%"))
+            {
+                value = value.TrimEnd('%');
+
+                if (double.TryParse(value, out double percentValue))
+                {
+                    return percentValue / 100.0; // convert to decimal
+                }
+            }
+            else
+            {
+                if (double.TryParse(value, out double numericValue))
+                {
+                    return numericValue;
+                }
+            }
+
+            throw new FormatException($"Unable to parse '{value}' as a numeric or percentage value.");
+        }
+
+        private double ParseFormattedValue(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                throw new ArgumentException("Value cannot be null or empty");
+
+            value = value.Trim().ToUpper();
+
+            double multiplier = 1;
+            if (value.EndsWith("T"))
+            {
+                multiplier = 1_000_000_000_000;
+                value = value[..^1];
+            }
+            else if (value.EndsWith("B"))
+            {
+                multiplier = 1_000_000_000;
+                value = value[..^1];
+            }
+            else if (value.EndsWith("M"))
+            {
+                multiplier = 1_000_000;
+                value = value[..^1];
+            }
+            else if (value.EndsWith("K"))
+            {
+                multiplier = 1_000;
+                value = value[..^1];
+            }
+
+            if (!double.TryParse(value, out double baseValue))
+                throw new FormatException("Invalid formatted number");
+
+            return baseValue * multiplier;
+        }
+        public string FormatNumber(double number)
+        {
+            string suffix;
+            double formatted;
+
+            if (number >= 1_000_000_000_000)
+            {
+                formatted = number / 1_000_000_000_000.0;
+                suffix = "T";
+            }
+            else if (number >= 1_000_000_000)
+            {
+                formatted = number / 1_000_000_000.0;
+                suffix = "B";
+            }
+            else if (number >= 1_000_000)
+            {
+                formatted = number / 1_000_000.0;
+                suffix = "M";
+            }
+            else if (number >= 1_000)
+            {
+                formatted = number / 1_000.0;
+                suffix = "K";
+            }
+            else
+            {
+                return number.ToString("N2"); // Less than 1000, just format to two decimals
+            }
+
+            return $"{formatted:N2}{suffix}";
+        }
 
         public async Task<ResponseDto<StockAnaResponse>> StockAnalyserResponse(StockAnalyserRequest req)
         {

@@ -256,12 +256,32 @@ namespace AlpaStock.Api.Controllers
                 return BadRequest(result);
             }
         }
-        [AllowAnonymous]
+        
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet("fundamental-metric")]
         public async Task<IActionResult> FundamentalMetricDatas(string symbol, string period)
         {
             var result = await _stockService.Metrics(symbol, period);
+
+            if (result.StatusCode == 200 || result.StatusCode == 201)
+            {
+                return Ok(result);
+            }
+            else if (result.StatusCode == 404)
+            {
+                return NotFound(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+        }
+        [AllowAnonymous]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpGet("alpha-8-piller-screener")]
+        public async Task<IActionResult> AlphaStock8Pillers(string symbol, string period)
+        {
+            var result = await _stockService.AlphaStock8Pillers(symbol, period);
 
             if (result.StatusCode == 200 || result.StatusCode == 201)
             {
