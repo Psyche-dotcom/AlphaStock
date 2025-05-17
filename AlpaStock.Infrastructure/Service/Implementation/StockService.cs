@@ -513,6 +513,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             var metricFirst = new MetricFirst();
             var metricSecond = new MetricSecond();
             var metricThird = new MetricThird();
+            var metricFourth = new MetricFourth();
             try
             {
                 var getQuote = await GetStockQuote(symbol);
@@ -652,6 +653,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     return response;
                 }
                 var resultGrowth = JsonConvert.DeserializeObject<List<FinancialGrowth>>(makeGrowthRequest.Content);
+                metricFirst.MarketCap = result[0].MarketCap.ToString();
                 metricFirst.ProfitMarginTTM = resultRatioTTM[0].NetProfitMarginTTM.ToString() + "%";
                 metricFirst.AvgProfitMargin5yrs = ((resultRatio[0].NetProfitMargin + resultRatio[1].NetProfitMargin + resultRatio[2].NetProfitMargin + resultRatio[3].NetProfitMargin + resultRatio[4].NetProfitMargin) / 5).ToString() + "%";
                 metricFirst.RevenueTTM = resultIncome[0].Revenue.ToString();
@@ -688,18 +690,22 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 metricThird.PriceToBookRatio = resultRatio[0].PriceToBookRatio.ToString();
                 metricThird.ReturnOnInvestedCapitalTTM = resultTTM[0].ReturnOnInvestedCapitalTTM.ToString() + "%";
                 metricThird.AvgROIC5yrs = ((result[0].ReturnOnInvestedCapital + result[1].ReturnOnInvestedCapital + result[2].ReturnOnInvestedCapital + result[3].ReturnOnInvestedCapital + result[4].ReturnOnInvestedCapital) / 5).ToString() + "%";
-                metricThird.ADayHigh = getQuote.Result[0].dayHigh.ToString();
-                metricThird.ADaylow = getQuote.Result[0].dayLow.ToString();
-                metricThird.AYearHigh = getQuote.Result[0].yearHigh.ToString();
-                metricThird.AYearlow = getQuote.Result[0].yearLow.ToString();
-                metricThird.previousClose = getQuote.Result[0].previousClose.ToString();
-                metricThird.priceAvg200 = getQuote.Result[0].priceAvg200.ToString();
-                metricThird.priceAvg50 = getQuote.Result[0].priceAvg50.ToString();
+
+
+
+                metricFourth.ADayHigh = getQuote.Result[0].dayHigh.ToString();
+                metricFourth.ADaylow = getQuote.Result[0].dayLow.ToString();
+                metricFourth.AYearHigh = getQuote.Result[0].yearHigh.ToString();
+                metricFourth.AYearlow = getQuote.Result[0].yearLow.ToString();
+                metricFourth.previousClose = getQuote.Result[0].previousClose.ToString();
+                metricFourth.priceAvg200 = getQuote.Result[0].priceAvg200.ToString();
+                metricFourth.priceAvg50 = getQuote.Result[0].priceAvg50.ToString();
                 var resultFinal = new FundamentalMetricData();
 
                 resultFinal.metricFirst = metricFirst;
                 resultFinal.metricSecond = metricSecond;
                 resultFinal.metricThird = metricThird;
+                resultFinal.metricFourth = metricFourth;
                 response.StatusCode = 200;
                 response.DisplayMessage = "Success";
                 response.Result = resultFinal;
