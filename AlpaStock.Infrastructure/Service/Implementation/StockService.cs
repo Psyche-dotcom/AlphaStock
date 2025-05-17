@@ -1025,7 +1025,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 resp.Add(new Alpha8PillerResp()
                 {
                     header = "LTL/Avg FCF (5 yr) < 5",
-                    amount = ltl.ToString(),
+                    amount =FormatNumber((double)ltl),
                     isActive = Compare(ltl.ToString(), 5, "<")
                 });
                 resp.Add(new Alpha8PillerResp()
