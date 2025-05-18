@@ -1036,7 +1036,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 }); 
                 resp.Add(new Alpha8PillerResp()
                 {
-                    header = "P/FCF Avg FCF (5 yr) < 22",
+                    header = "P/Avg FCF (5 yr)",
                     amount = FormatNumber((double)avgCashflow),
                     isActive = Compare("22B", (double)avgCashflow, ">")
                 });
