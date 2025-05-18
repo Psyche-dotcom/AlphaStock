@@ -942,7 +942,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 var netincome5yearsAvg = ((resultIncome[0].NetIncome + resultIncome[1].NetIncome + resultIncome[2].NetIncome + resultIncome[3].NetIncome + resultIncome[4].NetIncome) / 5);
                 resp.Add(new Alpha8PillerResp()
                 {
-                    header = "P/E Avg Net Income (5 yr) < 22B",
+                    header = "P/E Avg Net Income (5 yr) < 22",
                     amount = FormatNumber((double)netincome5yearsAvg),
                     isActive = Compare("22B", (double)netincome5yearsAvg, ">")
                 });
@@ -1036,7 +1036,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 }); 
                 resp.Add(new Alpha8PillerResp()
                 {
-                    header = "P/FCF Avg FCF (5 yr) < 22B",
+                    header = "P/FCF Avg FCF (5 yr) < 22",
                     amount = FormatNumber((double)avgCashflow),
                     isActive = Compare("22B", (double)avgCashflow, ">")
                 });
