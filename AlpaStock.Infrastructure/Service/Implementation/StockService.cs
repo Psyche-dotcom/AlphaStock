@@ -621,7 +621,21 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     response.ErrorMessages = new List<string>() { "Unable to get the stock Income statement" };
                     return response;
                 }
-                var resultIncome = JsonConvert.DeserializeObject<List<IncomeStatementResp>>(makeRequestIncome.Content);
+                var resultIncome = JsonConvert.DeserializeObject<List<IncomeStatementResp>>(makeRequestIncome.Content); 
+                
+                var apiUrlIcomeNo = _baseUrl + $"stable/income-statement?symbol={symbol}&period={period}&limit=5";
+                var makeRequestIncomeNo = await _apiClient.GetAsync<string>(apiUrlIcomeNo);
+                if (!makeRequestIncomeNo.IsSuccessful)
+                {
+                    _logger.LogError("stock income statement error mess", makeRequestIncomeNo.ErrorMessage);
+                    _logger.LogError("stock income statement error ex", makeRequestIncomeNo.ErrorException);
+                    _logger.LogError("stock income statement error con", makeRequestIncomeNo.Content);
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Unable to get the stock Income statement" };
+                    return response;
+                }
+                var resultIncomeNo = JsonConvert.DeserializeObject<List<IncomeStatementResp>>(makeRequestIncomeNo.Content);
 
 
                 var apiUrlCash = _baseUrl + $"stable/cash-flow-statement-ttm?symbol={symbol}&period={period}&limit=5";
@@ -638,7 +652,23 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 }
 
 
-                var resultCash = JsonConvert.DeserializeObject<List<CashFlowStatement>>(makeRequestCash.Content);
+                var resultCash = JsonConvert.DeserializeObject<List<CashFlowStatement>>(makeRequestCash.Content);  
+                 
+                var apiUrlCashNO = _baseUrl + $"stable/cash-flow-statement?symbol={symbol}&period={period}&limit=5";
+                var makeRequestCashNo = await _apiClient.GetAsync<string>(apiUrlCashNO);
+                if (!makeRequestCashNo.IsSuccessful)
+                {
+                    _logger.LogError("stock cash-flow-statement error mess", makeRequestCashNo.ErrorMessage);
+                    _logger.LogError("stock cash-flow-statement error ex", makeRequestCashNo.ErrorException);
+                    _logger.LogError("stock cash-flow-statement error con", makeRequestCashNo.Content);
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Unable to get the stock cash flow statement" };
+                    return response;
+                }
+
+
+                var resultCashNo = JsonConvert.DeserializeObject<List<CashFlowStatement>>(makeRequestCashNo.Content);
 
                 var apiUrlGrowth = _baseUrl + $"stable/income-statement-growth?symbol={symbol}&period={period}&limit=10";
                 var makeGrowthRequest = await _apiClient.GetAsync<string>(apiUrlGrowth);
@@ -653,33 +683,44 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     return response;
                 }
                 var resultGrowth = JsonConvert.DeserializeObject<List<FinancialGrowth>>(makeGrowthRequest.Content);
+
+
+                var getStockAnalyzer = await StockAnalyserRequest(symbol, period);
+                if (getStockAnalyzer.StatusCode != 200)
+                {
+
+                    response.StatusCode = getStockAnalyzer.StatusCode;
+                    response.DisplayMessage = getStockAnalyzer.DisplayMessage;
+                    response.ErrorMessages = getStockAnalyzer.ErrorMessages;
+                    return response;
+                }
+
+
+
                 metricFirst.MarketCap = result[0].MarketCap.ToString();
                 metricFirst.ProfitMarginTTM = resultRatioTTM[0].NetProfitMarginTTM.ToString() + "%";
                 metricFirst.AvgProfitMargin5yrs = ((resultRatio[0].NetProfitMargin + resultRatio[1].NetProfitMargin + resultRatio[2].NetProfitMargin + resultRatio[3].NetProfitMargin + resultRatio[4].NetProfitMargin) / 5).ToString() + "%";
                 metricFirst.RevenueTTM = resultIncome[0].Revenue.ToString();
                 metricFirst.NetIcomeTTM = resultIncome[0].NetIncome.ToString();
-                var netincome5yearsAvg = ((resultIncome[0].NetIncome + resultIncome[1].NetIncome + resultIncome[2].NetIncome + resultIncome[3].NetIncome + resultIncome[4].NetIncome) / 5);
+                var netincome5yearsAvg = ((resultIncomeNo[0].NetIncome + resultIncomeNo[1].NetIncome + resultIncomeNo[2].NetIncome + resultIncomeNo[3].NetIncome + resultIncomeNo[4].NetIncome) / 5);
                 metricFirst.NetIcomeTTM5year = netincome5yearsAvg.ToString();
-                metricFirst.RevenuePerShare = resultRatio[0].RevenuePerShare.ToString();
+             
                 metricFirst.PToERatioTTM = resultRatioTTM[0].PriceToEarningsRatioTTM.ToString();
                 metricFirst.PToEAvgNetIncomeFive5yrs = (result[0].MarketCap / netincome5yearsAvg).ToString();
                 metricFirst.PSRatioTTM = resultRatioTTM[0].PriceToSalesRatioTTM.ToString();
-                metricFirst.PSRatioFive5yrs = resultRatio[4].PriceToSalesRatio.ToString();
+              
                 metricFirst.GrossProfitMarginTTM = resultRatioTTM[0].GrossProfitMarginTTM.ToString() + "%";
 
 
                 metricSecond.EnterpriseValue = result[0].EnterpriseValue.ToString();
                 metricSecond.EVToNet = (result[0].EnterpriseValue / resultIncome[0].NetIncome).ToString();
-                metricSecond.EV5YEARS = result[4].EnterpriseValue.ToString();
-                metricSecond.EVToSales = result[0].EvToSales.ToString();
-                metricSecond.EVToSales5yrs = result[4].EvToSales.ToString();
-                metricSecond.EVToFCF5yrs = result[4].EvToFreeCashFlow.ToString();
+             
                 metricSecond.EVToFCF = result[0].EvToFreeCashFlow.ToString();
                 metricSecond.FreeCashFlow = resultCash[0].FreeCashFlow.ToString();
                 metricSecond.PriceToFCFTTM = (result[0].MarketCap / resultCash[0].FreeCashFlow).ToString();
-                metricSecond.AvgFCF5Yrs = ((resultCash[0].FreeCashFlow + resultCash[1].FreeCashFlow + resultCash[2].FreeCashFlow + resultCash[3].FreeCashFlow + resultCash[4].FreeCashFlow) / 5).ToString();
+                metricSecond.AvgFCF5Yrs = ((resultCashNo[0].FreeCashFlow + resultCashNo[1].FreeCashFlow + resultCashNo[2].FreeCashFlow + resultCashNo[3].FreeCashFlow + resultCashNo[4].FreeCashFlow) / 5).ToString();
                 metricSecond.DividendsYieldTTM = resultRatioTTM[0].DividendYieldTTM.ToString() + "%";
-                metricSecond.FCFTTMTOEQUITYTTM = resultTTM[0].FreeCashFlowToEquityTTM.ToString();
+              
 
 
 
@@ -689,7 +730,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 metricThird.CompRevGrowth10yrs = resultGrowth[9].GrowthRevenue.ToString() + "%";
                 metricThird.PriceToBookRatio = resultRatio[0].PriceToBookRatio.ToString();
                 metricThird.ReturnOnInvestedCapitalTTM = resultTTM[0].ReturnOnInvestedCapitalTTM.ToString() + "%";
-                metricThird.AvgROIC5yrs = ((result[0].ReturnOnInvestedCapital + result[1].ReturnOnInvestedCapital + result[2].ReturnOnInvestedCapital + result[3].ReturnOnInvestedCapital + result[4].ReturnOnInvestedCapital) / 5).ToString() + "%";
+                metricThird.AvgROIC5yrs = getStockAnalyzer.Result.ROIC.Fifth + "%";
 
 
 
@@ -697,9 +738,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 metricFourth.ADaylow = getQuote.Result[0].dayLow.ToString();
                 metricFourth.AYearHigh = getQuote.Result[0].yearHigh.ToString();
                 metricFourth.AYearlow = getQuote.Result[0].yearLow.ToString();
-                metricFourth.previousClose = getQuote.Result[0].previousClose.ToString();
-                metricFourth.priceAvg200 = getQuote.Result[0].priceAvg200.ToString();
-                metricFourth.priceAvg50 = getQuote.Result[0].priceAvg50.ToString();
+                
                 var resultFinal = new FundamentalMetricData();
 
                 resultFinal.metricFirst = metricFirst;
