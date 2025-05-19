@@ -734,8 +734,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
 
 
 
-                metricFourth.ADayHigh = getQuote.Result[0].dayHigh.ToString();
-                metricFourth.ADaylow = getQuote.Result[0].dayLow.ToString();
+              
                 metricFourth.AYearHigh = getQuote.Result[0].yearHigh.ToString();
                 metricFourth.AYearlow = getQuote.Result[0].yearLow.ToString();
                 
