@@ -939,12 +939,34 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 }
                 var resultIncome = JsonConvert.DeserializeObject<List<IncomeStatementResp>>(makeRequestIncome.Content);
 
+
+                var apiUrlKey = _baseUrl + $"stable/key-metrics?symbol={symbol}&limit=5&period={period}";
+                var makeRequest = await _apiClient.GetAsync<string>(apiUrlKey);
+                if (!makeRequest.IsSuccessful)
+                {
+                    _logger.LogError("key-metrics error mess", makeRequest.ErrorMessage);
+                    _logger.LogError("key-metrics error ex", makeRequest.ErrorException);
+                    _logger.LogError("key-metrics error con", makeRequest.Content);
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Unable to get the stock key-metrics" };
+                    return response;
+                }
+                var resultKey = JsonConvert.DeserializeObject<List<KeyMetricRes>>(makeRequest.Content);
+                if (!resultKey.Any())
+                {
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Stock key-metrics is empty" };
+                    return response;
+                }
                 var netincome5yearsAvg = ((resultIncome[0].NetIncome + resultIncome[1].NetIncome + resultIncome[2].NetIncome + resultIncome[3].NetIncome + resultIncome[4].NetIncome) / 5);
+                var avgPe = resultKey[0].MarketCap / netincome5yearsAvg;
                 resp.Add(new Alpha8PillerResp()
                 {
                     header = "P/E Avg Net Income (5 yr) < 22",
-                    amount = FormatNumber((double)netincome5yearsAvg),
-                    isActive = Compare("22B", (double)netincome5yearsAvg, ">")
+                    amount = FormatNumber((double)avgPe),
+                    isActive = Compare("22", (double)avgPe, ">")
                 });
                 resp.Add(new Alpha8PillerResp()
                 {
@@ -1033,12 +1055,15 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     header = "FCF Growth (5 yr)",
                     amount =FormatNumber((double)cashflow.Result[0].FreeCashFlow),
                     isActive = Compare(cashflow.Result[0].FreeCashFlow.ToString(),(double) cashflow.Result[4].FreeCashFlow, ">")
-                }); 
+                });
+
+
+                var avgFCF = resultKey[0].MarketCap / avgCashflow;
                 resp.Add(new Alpha8PillerResp()
                 {
-                    header = "P/Avg FCF (5 yr)",
-                    amount = FormatNumber((double)avgCashflow),
-                    isActive = Compare("22B", (double)avgCashflow, ">")
+                    header = "P/Avg FCF (5 yr) < 22",
+                    amount = FormatNumber((double)avgFCF),
+                    isActive = Compare("22", (double)avgFCF, ">")
                 });
 
               
