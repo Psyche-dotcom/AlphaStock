@@ -22,13 +22,13 @@ namespace AlpaStock.Infrastructure.Service.Implementation
         private readonly IMapper _mapper;
         private readonly ILogger<AccountService> _logger;
         private readonly IGenerateJwt _generateJwt;
-
+        private readonly IAlphaRepository<UserSubscription> _userSubRepo;
         public AccountService(IAccountRepo accountRepo,
             ILogger<AccountService> logger,
             IGenerateJwt generateJwt,
             IEmailServices emailServices,
             IAlphaRepository<ForgetPasswordToken> forgetPasswordTokenRepo,
-            ICloudinaryService cloudinaryService, IMapper mapper)
+            ICloudinaryService cloudinaryService, IMapper mapper, IAlphaRepository<UserSubscription> userSubRepo)
         {
             _accountRepo = accountRepo;
             _logger = logger;
@@ -37,6 +37,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             _forgetPasswordTokenRepo = forgetPasswordTokenRepo;
             _cloudinaryService = cloudinaryService;
             _mapper = mapper;
+            _userSubRepo = userSubRepo;
         }
         public async Task<ResponseDto<string>> RegisterUser(SignUp signUp, string Role)
         {
@@ -101,6 +102,16 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 var message = new Message(new string[] { createUser.Email }, "Confirm Email Token", $"<p>Your confirm email code is below<p><h6>{GenerateConfirmEmailToken.Token}</h6>");
                 _emailServices.SendEmail(message);
 
+
+                // to be deleted later
+                await _userSubRepo.Add(new UserSubscription()
+                {
+                    SubscriptionId = "f1422e50-47b4-4e4c-830b-4cb310e2c613",
+                    UserId = createUser.Id,
+                    SubscrptionStart = DateTime.UtcNow,
+                    SubscrptionEnd = DateTime.UtcNow.AddMonths(10),
+                });
+
                 response.StatusCode = StatusCodes.Status200OK;
                 response.DisplayMessage = "Successful";
                 response.Result = "User successfully created";
@@ -143,14 +154,15 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     response.DisplayMessage = "Error";
                     return response;
                 }
-                if (!checkUserExist.EmailConfirmed)
+                // to be uncomment later
+               /* if (!checkUserExist.EmailConfirmed)
                 {
                     response.ErrorMessages = new List<string>() { "Please confirm your email address" };
                     response.StatusCode = 400;
                     response.DisplayMessage = "Error";
                     return response;
 
-                }
+                }*/
                 var generateToken = await _generateJwt.GenerateToken(checkUserExist);
                 if (generateToken == null)
                 {
