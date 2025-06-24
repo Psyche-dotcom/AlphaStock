@@ -3,7 +3,7 @@
     public class DiscountedEarningsValue
     {
         public double Low { get; set; }
-        public double Mid { get; set; }
-        public double High { get; set; }
+        public double? Mid { get; set; }
+        public double? High { get; set; }
     }
 }

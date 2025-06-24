@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using System.ComponentModel.Design;
 
 namespace AlpaStock.Infrastructure.Service.Implementation
 {
@@ -68,6 +69,129 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             {
                 _logger.LogError($"stock list ex - {ex.Message}", ex);
                 response.ErrorMessages = new List<string> { "Unable to get the stock list at the moment" };
+                response.StatusCode = 500;
+                response.DisplayMessage = "Error";
+                return response;
+            }
+        } 
+        public async Task<ResponseDto<List<NewsItem>>> GetStockNews(string symbol, string page, string limit)
+        {
+            var response = new ResponseDto<List<NewsItem>>();
+            try
+            {
+            
+                var apiUrl = _baseUrl + $"stable/news/stock?symbols={symbol}&page={page}&limit={limit}";
+                var makeRequest = await _apiClient.GetAsync<string>(apiUrl);
+                if (!makeRequest.IsSuccessful)
+                {
+                    _logger.LogError("stock news error mess", makeRequest.ErrorMessage);
+                    _logger.LogError("stock news error ex", makeRequest.ErrorException);
+                    _logger.LogError("stock news error con", makeRequest.Content);
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Unable to get the stock news" };
+                    return response;
+                }
+                var result = JsonConvert.DeserializeObject<List<NewsItem>>(makeRequest.Content);
+                if (!result.Any())
+                {
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Stock news is empty" };
+                    return response;
+                }
+                response.StatusCode = 200;
+                response.DisplayMessage = "Success";
+                response.Result = result;
+                return response;
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"stock news list ex - {ex.Message}", ex);
+                response.ErrorMessages = new List<string> { "Unable to get the stock news list at the moment" };
+                response.StatusCode = 500;
+                response.DisplayMessage = "Error";
+                return response;
+            }
+        }
+        public async Task<ResponseDto<List<NewsItem>>> GetStockPressNews(string symbol, string page, string limit)
+        {
+            var response = new ResponseDto<List<NewsItem>>();
+            try
+            {
+            
+                var apiUrl = _baseUrl + $"stable/news/press-releases?symbols={symbol}&page={page}&limit={limit}";
+                var makeRequest = await _apiClient.GetAsync<string>(apiUrl);
+                if (!makeRequest.IsSuccessful)
+                {
+                    _logger.LogError("stock news press-releases error mess", makeRequest.ErrorMessage);
+                    _logger.LogError("stock news press-releases error ex", makeRequest.ErrorException);
+                    _logger.LogError("stock news press-releases error con", makeRequest.Content);
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Unable to get the stock press-releases news" };
+                    return response;
+                }
+                var result = JsonConvert.DeserializeObject<List<NewsItem>>(makeRequest.Content);
+                if (!result.Any())
+                {
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Stock press-releases news is empty" };
+                    return response;
+                }
+                response.StatusCode = 200;
+                response.DisplayMessage = "Success";
+                response.Result = result;
+                return response;
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"stock news list ex - {ex.Message}", ex);
+                response.ErrorMessages = new List<string> { "Unable to get the stock press-releases news list at the moment" };
+                response.StatusCode = 500;
+                response.DisplayMessage = "Error";
+                return response;
+            }
+        }  
+        public async Task<ResponseDto<List<NewsItem>>> GetGeneralStockNews(string page, string limit)
+        {
+            var response = new ResponseDto<List<NewsItem>>();
+            try
+            {
+            
+                var apiUrl = _baseUrl + $"stable/news/stock-latest?page={page}&limit={limit}";
+                var makeRequest = await _apiClient.GetAsync<string>(apiUrl);
+                if (!makeRequest.IsSuccessful)
+                {
+                    _logger.LogError("stock news stock-latest error mess", makeRequest.ErrorMessage);
+                    _logger.LogError("stock news stock-latest error ex", makeRequest.ErrorException);
+                    _logger.LogError("stock news stock-latest error con", makeRequest.Content);
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Unable to get the stock stock-latest news" };
+                    return response;
+                }
+                var result = JsonConvert.DeserializeObject<List<NewsItem>>(makeRequest.Content);
+                if (!result.Any())
+                {
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Stock stock-latest news is empty" };
+                    return response;
+                }
+                response.StatusCode = 200;
+                response.DisplayMessage = "Success";
+                response.Result = result;
+                return response;
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"stock stock-latest list ex - {ex.Message}", ex);
+                response.ErrorMessages = new List<string> { "Unable to get the stock stock-latest news list at the moment" };
                 response.StatusCode = 500;
                 response.DisplayMessage = "Error";
                 return response;
@@ -889,7 +1013,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 PERatio.First = $"{pe:F2}";
                 PFCF.First = $"{pfcf:F2}";
 
-
+               
 
                 var latestPrice1 = getQuote.Result[0].price;
                 var latestIncomeStatement1 = resultIncome[4];
@@ -1485,6 +1609,9 @@ namespace AlpaStock.Infrastructure.Service.Implementation
 
             try
             {
+                var DiscountedEarningsValue = new DiscountedEarningsValue();
+                var DiscountedFreeCashFlowValue = new DiscountedFreeCashFlowValue();
+                
                 var apiUrlIcome = _baseUrl + $"stable/income-statement-ttm?symbol={req.symbol}&period=annual&limit=1";
                 var makeRequestIncome = await _apiClient.GetAsync<string>(apiUrlIcome);
                 if (!makeRequestIncome.IsSuccessful)
@@ -1505,65 +1632,96 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     response.ErrorMessages = new List<string>() { "Stock Income statement is empty" };
                     return response;
                 }
-
+                var result = new StockAnaResponse();
 
                 double AverageDiluted = (double)resultIncome[0].WeightedAverageShsOutDil;
                 var latestIncomeStatementRevenue = resultIncome[0].Revenue;
 
                 double futureRevLow = (double)(latestIncomeStatementRevenue * Math.Pow(1 + (req.RevGrowth.low / 100), req.years));
-                double futureRevMid = (double)(latestIncomeStatementRevenue * Math.Pow(1 + (req.RevGrowth.mid / 100), req.years));
-                double futureRevHigh = (double)(latestIncomeStatementRevenue * Math.Pow(1 + (req.RevGrowth.High / 100), req.years));
-
-
                 double futureNetIcomeLow = futureRevLow * (req.ProfitMargin.low / 100);
-                double futureNetIcomeMid = futureRevMid * (req.ProfitMargin.mid / 100);
-                double futureNetIcomeHigh = futureRevHigh * (req.ProfitMargin.High / 100);
-
                 double futureMarketCapLow = futureNetIcomeLow * (req.PERatio.low);
-                double futureMarketCapMid = futureNetIcomeMid * (req.PERatio.mid);
-                double futureMarketCapHigh = futureNetIcomeHigh * (req.PERatio.High);
-
-
                 double presentValueMarketCapLow = futureMarketCapLow / Math.Pow(1 + (req.DesiredAnnReturn.low / 100), req.years);
-                double presentValueMarketCapMid = futureMarketCapMid / Math.Pow(1 + (req.DesiredAnnReturn.mid / 100), req.years);
-                double presentValueMarketCapHigh = futureMarketCapHigh / Math.Pow(1 + (req.DesiredAnnReturn.High / 100), req.years);
-
-
                 double presentValuePricePerShareLow = presentValueMarketCapLow / AverageDiluted;
-                double presentValuePricePerShareMid = presentValueMarketCapMid / AverageDiluted;
-                double presentValuePricePerShareHigh = presentValueMarketCapHigh / AverageDiluted;
 
-                var DiscountedEarningsValue = new DiscountedEarningsValue()
-                {
-                    Low = presentValuePricePerShareLow,
-                    Mid = presentValuePricePerShareMid,
-                    High = presentValuePricePerShareHigh,
-                };
-                var result = new StockAnaResponse();
-                result.DiscountedEarningsValue = DiscountedEarningsValue;
 
                 double futureFreeCashFlowLow = futureRevLow * (req.FreeCashFlowMargin.low / 100);
-                double futureFreeCashFlowMid = futureRevMid * (req.FreeCashFlowMargin.mid / 100);
-                double futureFreeCashFlowHigh = futureRevHigh * (req.FreeCashFlowMargin.High / 100);
-
                 double futureMarketCapCashFlowLow = futureFreeCashFlowLow * (req.PFCF.low);
-                double futurMarketCapCashFlowMid = futureFreeCashFlowMid * (req.PFCF.mid);
-                double futureMarketCapCashFlowHigh = futureFreeCashFlowHigh * (req.PFCF.High);
-
                 double presentValueMarketCapCashFlowLow = futureMarketCapCashFlowLow / Math.Pow(1 + (req.DesiredAnnReturn.low / 100), req.years);
-                double presentValueMarketCapCashFlowMid = futurMarketCapCashFlowMid / Math.Pow(1 + (req.DesiredAnnReturn.mid / 100), req.years);
-                double presentValueMarketCapCashFlowHigh = futureMarketCapCashFlowHigh / Math.Pow(1 + (req.DesiredAnnReturn.High / 100), req.years);
-
                 double presentValuePricePerShareCashFlowLow = presentValueMarketCapCashFlowLow / AverageDiluted;
-                double presentValuePricePerShareCashFlowMid = presentValueMarketCapCashFlowMid / AverageDiluted;
-                double presentValuePricePerShareCashFlowHigh = presentValueMarketCapCashFlowHigh / AverageDiluted;
 
-                var DiscountedFreeCashFlowValue = new DiscountedFreeCashFlowValue()
+                if(req.selection == 1)
                 {
-                    Low = presentValuePricePerShareCashFlowLow,
-                    Mid = presentValuePricePerShareCashFlowMid,
-                    High = presentValuePricePerShareCashFlowHigh,
-                };
+                    DiscountedEarningsValue.Low = presentValuePricePerShareLow;
+                    DiscountedFreeCashFlowValue.Low = presentValuePricePerShareCashFlowLow;
+                    result.DiscountedEarningsValue = DiscountedEarningsValue;
+                    result.DiscountedFreeCashFlowValue = DiscountedFreeCashFlowValue;
+                    response.Result = result;
+                    response.StatusCode = 200;
+                    response.DisplayMessage = "Success";
+                    return response;
+                }
+
+
+
+
+                double? futureRevMid = (latestIncomeStatementRevenue * Math.Pow((double)(1 + (req.RevGrowth.mid / 100)), req.years));
+                double? futureNetIcomeMid = futureRevMid * (req.ProfitMargin.mid / 100);
+                double? futureMarketCapMid = futureNetIcomeMid * (req.PERatio.mid);
+                double? presentValueMarketCapMid = futureMarketCapMid / Math.Pow((double)(1 + (req.DesiredAnnReturn.mid / 100)), req.years);
+                double? presentValuePricePerShareMid = presentValueMarketCapMid / AverageDiluted;
+                double? futureFreeCashFlowMid = futureRevMid * (req.FreeCashFlowMargin.mid / 100);
+                double? futurMarketCapCashFlowMid = futureFreeCashFlowMid * (req.PFCF.mid);
+                double? presentValueMarketCapCashFlowMid = futurMarketCapCashFlowMid / Math.Pow((double)(1 + (req.DesiredAnnReturn.mid / 100)), req.years);
+                double? presentValuePricePerShareCashFlowMid = presentValueMarketCapCashFlowMid / AverageDiluted;
+
+
+                if (req.selection == 2)
+                {
+                    DiscountedEarningsValue.Low = presentValuePricePerShareLow;
+                    DiscountedEarningsValue.Mid = presentValuePricePerShareMid;
+                    DiscountedFreeCashFlowValue.Low = presentValuePricePerShareCashFlowLow;
+                    DiscountedFreeCashFlowValue.Mid = presentValuePricePerShareCashFlowMid;
+                    result.DiscountedEarningsValue = DiscountedEarningsValue;
+                    result.DiscountedFreeCashFlowValue = DiscountedFreeCashFlowValue;
+                    response.Result = result;
+                    response.StatusCode = 200;
+                    response.DisplayMessage = "Success";
+                    return response;
+                }
+
+
+
+
+                double? futureRevHigh = (latestIncomeStatementRevenue * Math.Pow((double)(1 + (req.RevGrowth.High / 100)), req.years));
+                double? futureNetIcomeHigh = futureRevHigh * (req.ProfitMargin.High / 100);
+                double? futureMarketCapHigh = futureNetIcomeHigh * (req.PERatio.High);
+                double? presentValueMarketCapHigh = futureMarketCapHigh / Math.Pow((double)(1 + (req.DesiredAnnReturn.High / 100)), req.years);
+                double? presentValuePricePerShareHigh = presentValueMarketCapHigh / AverageDiluted;
+
+
+                double? futureFreeCashFlowHigh = futureRevHigh * (req.FreeCashFlowMargin.High / 100);
+                double? futureMarketCapCashFlowHigh = futureFreeCashFlowHigh * (req.PFCF.High);
+                double? presentValueMarketCapCashFlowHigh = futureMarketCapCashFlowHigh / Math.Pow((double)(1 + (req.DesiredAnnReturn.High / 100)), req.years);
+                double? presentValuePricePerShareCashFlowHigh = presentValueMarketCapCashFlowHigh / AverageDiluted;
+
+                if (req.selection == 3)
+                {
+                    DiscountedEarningsValue.Low = presentValuePricePerShareLow;
+                    DiscountedEarningsValue.Mid = presentValuePricePerShareMid;
+                    DiscountedEarningsValue.High = presentValuePricePerShareHigh;
+                    DiscountedFreeCashFlowValue.Low = presentValuePricePerShareCashFlowLow;
+                    DiscountedFreeCashFlowValue.Mid = presentValuePricePerShareCashFlowMid;
+                    DiscountedFreeCashFlowValue.High = presentValuePricePerShareCashFlowHigh;
+                    result.DiscountedEarningsValue = DiscountedEarningsValue;
+                    result.DiscountedFreeCashFlowValue = DiscountedFreeCashFlowValue;
+                    response.Result = result;
+                    response.StatusCode = 200;
+                    response.DisplayMessage = "Success";
+                    return response;
+                }
+
+
+               
 
 
                 result.DiscountedFreeCashFlowValue = DiscountedFreeCashFlowValue;

@@ -6,6 +6,9 @@ namespace AlpaStock.Infrastructure.Service.Interface
 {
     public interface IStockService
     {
+        Task<ResponseDto<List<NewsItem>>> GetGeneralStockNews(string page, string limit);
+        Task<ResponseDto<List<NewsItem>>> GetStockPressNews(string symbol, string page, string limit);
+        Task<ResponseDto<List<NewsItem>>> GetStockNews(string symbol, string page, string limit);
         Task<ResponseDto<string>> AddMyAlpha(string userid, List<MyAlphaReq> req);
         Task<ResponseDto<IEnumerable<StockSearchResp>>> SearchStock(string symbol);
         Task<ResponseDto<StockAnalyserResponse>> StockAnalyserRequest(string symbol, string period);

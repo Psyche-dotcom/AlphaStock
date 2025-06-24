@@ -4,7 +4,8 @@
     {
         public string symbol {  get; set; }
         public double years { get; set; }
-       /* public ROICReq ROIC { get; set; }*/
+        
+        public int selection { get; set; }
         public DesiredAnnReturnReq DesiredAnnReturn { get; set; }
         public RevenueGrowthReq RevGrowth { get; set; }
         public ProfitMarginReq ProfitMargin { get; set; }
