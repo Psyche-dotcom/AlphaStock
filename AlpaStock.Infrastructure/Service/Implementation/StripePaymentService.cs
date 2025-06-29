@@ -36,7 +36,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
 
 
 
-            StripeConfiguration.ApiKey = _configuration["StripeKey:SecretKey"];
+            StripeConfiguration.ApiKey = _configuration["TestStripeKey:SecretKey"];
             var stripePayment = new Payments();
             var response = new ResponseDto<string>();
             try
