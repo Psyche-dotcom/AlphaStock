@@ -278,6 +278,43 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 response.DisplayMessage = "Error";
                 return response;
             }
+        }    
+        public async Task<ResponseDto<IEnumerable<IncomeStatementResp>>> GetStockIncomeStatementTTM(string symbol, string period)
+        {
+            var response = new ResponseDto<IEnumerable<IncomeStatementResp>>();
+            try
+            {
+
+                var apiUrlIcome2 = _baseUrl + $"stable/income-statement-ttm?symbol={symbol}&period={period}&limit=1";
+                var makeRequestIncome2 = await _apiClient.GetAsync<string>(apiUrlIcome2);
+                if (!makeRequestIncome2.IsSuccessful)
+                {
+                    _logger.LogError("stock income statement error mess", makeRequestIncome2.ErrorMessage);
+                    _logger.LogError("stock income statement error ex", makeRequestIncome2.ErrorException);
+                    _logger.LogError("stock income statement error con", makeRequestIncome2.Content);
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Unable to get the stock Income statement" };
+                    return response;
+                }
+                var resultIncome2 = JsonConvert.DeserializeObject<List<IncomeStatementResp>>(makeRequestIncome2.Content);
+
+
+               
+                response.StatusCode = 200;
+                response.DisplayMessage = "Success";
+                response.Result = resultIncome2;
+                return response;
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"stock list ex - {ex.Message}", ex);
+                response.ErrorMessages = new List<string> { "Unable to get the stock Income statement ttm at the moment" };
+                response.StatusCode = 500;
+                response.DisplayMessage = "Error";
+                return response;
+            }
         }
         public async Task<ResponseDto<IEnumerable<BalanceSheetResp>>> GetStockBalanceSheet(string symbol, string period, string duration)
         {
@@ -319,6 +356,47 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 response.DisplayMessage = "Error";
                 return response;
             }
+        }   
+        public async Task<ResponseDto<IEnumerable<BalanceSheetResp>>> GetStockBalanceSheetTTM(string symbol, string period)
+        {
+            var response = new ResponseDto<IEnumerable<BalanceSheetResp>>();
+            try
+            {
+
+                var apiUrlBalance = _baseUrl + $"stable/balance-sheet-statement-ttm?symbol={symbol}&period={period}&limit=1";
+                var makeRequestBalance = await _apiClient.GetAsync<string>(apiUrlBalance);
+                if (!makeRequestBalance.IsSuccessful)
+                {
+                    _logger.LogError("stock balance-sheet-statement error mess", makeRequestBalance.ErrorMessage);
+                    _logger.LogError("stock balance-sheet-statement error ex", makeRequestBalance.ErrorException);
+                    _logger.LogError("stock balance-sheet-statement error con", makeRequestBalance.Content);
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Unable to get the stock balance sheet statement" };
+                    return response;
+                }
+                var resultBalance = JsonConvert.DeserializeObject<IEnumerable<BalanceSheetResp>>(makeRequestBalance.Content);
+                if (!resultBalance.Any())
+                {
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Stock balance sheet statement is empty" };
+                    return response;
+                }
+                response.StatusCode = 200;
+                response.DisplayMessage = "Success";
+                response.Result = resultBalance;
+                return response;
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"balance-sheet-statement ex - {ex.Message}", ex);
+                response.ErrorMessages = new List<string> { "Unable to get the stock Income statement at the moment" };
+                response.StatusCode = 500;
+                response.DisplayMessage = "Error";
+                return response;
+            }
         }
         public async Task<ResponseDto<List<CashFlowStatement>>> GetStockCashFlowStatement(string symbol, string period, string duration)
         {
@@ -327,6 +405,47 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             {
 
                 var apiUrlCash = _baseUrl + $"stable/cash-flow-statement?symbol={symbol}&period={period}&limit={duration}";
+                var makeRequestCash = await _apiClient.GetAsync<string>(apiUrlCash);
+                if (!makeRequestCash.IsSuccessful)
+                {
+                    _logger.LogError("stock cash-flow-statement error mess", makeRequestCash.ErrorMessage);
+                    _logger.LogError("stock cash-flow-statement error ex", makeRequestCash.ErrorException);
+                    _logger.LogError("stock cash-flow-statement error con", makeRequestCash.Content);
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Unable to get the stock cash flow statement" };
+                    return response;
+                }
+                var resultCash = JsonConvert.DeserializeObject<List<CashFlowStatement>>(makeRequestCash.Content);
+                if (!resultCash.Any())
+                {
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Stock cash flow statement is empty" };
+                    return response;
+                }
+                response.StatusCode = 200;
+                response.DisplayMessage = "Success";
+                response.Result = resultCash;
+                return response;
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"cash-flow-statement ex - {ex.Message}", ex);
+                response.ErrorMessages = new List<string> { "Unable to get the stock cash flow statement at the moment" };
+                response.StatusCode = 500;
+                response.DisplayMessage = "Error";
+                return response;
+            }
+        }    
+        public async Task<ResponseDto<List<CashFlowStatement>>> GetStockCashFlowStatementTTM(string symbol, string period)
+        {
+            var response = new ResponseDto<List<CashFlowStatement>>();
+            try
+            {
+
+                var apiUrlCash = _baseUrl + $"stable/cash-flow-statement-ttm?symbol={symbol}&period={period}&limit=1";
                 var makeRequestCash = await _apiClient.GetAsync<string>(apiUrlCash);
                 if (!makeRequestCash.IsSuccessful)
                 {

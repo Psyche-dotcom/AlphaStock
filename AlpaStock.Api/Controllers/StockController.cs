@@ -217,6 +217,24 @@ namespace AlpaStock.Api.Controllers
             {
                 return BadRequest(result);
             }
+        } 
+        [HttpGet("income-statement-ttm")]
+        public async Task<IActionResult> GetStockIncomeStatement(string symbol, string period)
+        {
+            var result = await _stockService.GetStockIncomeStatementTTM(symbol, period);
+
+            if (result.StatusCode == 200 || result.StatusCode == 201)
+            {
+                return Ok(result);
+            }
+            else if (result.StatusCode == 404)
+            {
+                return NotFound(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
         }
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet("balance-sheet")]
@@ -238,10 +256,48 @@ namespace AlpaStock.Api.Controllers
             }
         }
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpGet("balance-sheet-ttm")]
+        public async Task<IActionResult> GetStockBalanceSheetTTM(string symbol, string period)
+        {
+            var result = await _stockService.GetStockBalanceSheetTTM(symbol, period);
+
+            if (result.StatusCode == 200 || result.StatusCode == 201)
+            {
+                return Ok(result);
+            }
+            else if (result.StatusCode == 404)
+            {
+                return NotFound(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+        }
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet("cash-flow")]
         public async Task<IActionResult> GetStockCashFlowStatement(string symbol, string period, string duration)
         {
             var result = await _stockService.GetStockCashFlowStatement(symbol, period, duration);
+
+            if (result.StatusCode == 200 || result.StatusCode == 201)
+            {
+                return Ok(result);
+            }
+            else if (result.StatusCode == 404)
+            {
+                return NotFound(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+        } 
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpGet("cash-flow-ttm")]
+        public async Task<IActionResult> GetStockCashFlowStatementTTM(string symbol, string period)
+        {
+            var result = await _stockService.GetStockCashFlowStatementTTM(symbol, period);
 
             if (result.StatusCode == 200 || result.StatusCode == 201)
             {
