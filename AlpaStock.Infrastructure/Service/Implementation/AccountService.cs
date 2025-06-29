@@ -8,7 +8,10 @@ using AlpaStock.Infrastructure.Service.Interface;
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace AlpaStock.Infrastructure.Service.Implementation
 {
@@ -21,11 +24,13 @@ namespace AlpaStock.Infrastructure.Service.Implementation
         private readonly ICloudinaryService _cloudinaryService;
         private readonly IMapper _mapper;
         private readonly ILogger<AccountService> _logger;
+        private readonly byte[] _key;
+        private readonly IConfiguration _configuration;
         private readonly IGenerateJwt _generateJwt;
         private readonly IAlphaRepository<UserSubscription> _userSubRepo;
         public AccountService(IAccountRepo accountRepo,
             ILogger<AccountService> logger,
-            IGenerateJwt generateJwt,
+            IGenerateJwt generateJwt, IConfiguration configuration,
             IEmailServices emailServices,
             IAlphaRepository<ForgetPasswordToken> forgetPasswordTokenRepo,
             ICloudinaryService cloudinaryService, IMapper mapper, IAlphaRepository<UserSubscription> userSubRepo)
@@ -37,6 +42,8 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             _forgetPasswordTokenRepo = forgetPasswordTokenRepo;
             _cloudinaryService = cloudinaryService;
             _mapper = mapper;
+            _configuration = configuration;
+            _key = Encoding.UTF8.GetBytes(_configuration["EncryptionSettings:Key"]);
             _userSubRepo = userSubRepo;
         }
         public async Task<ResponseDto<string>> RegisterUser(SignUp signUp, string Role)
@@ -182,6 +189,129 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             {
                 _logger.LogError(ex.Message, ex);
                 response.ErrorMessages = new List<string>() { "Error in login the user" };
+                response.StatusCode = 500;
+                response.DisplayMessage = "Error";
+                return response;
+            }
+        }
+
+        public async Task<ResponseDto<LoginResultDto>> SignInRegisterSocialAccount(string Email, string LastName, string FirstName, string Role,string Country, string GenericPassword)
+        {
+            var response = new ResponseDto<LoginResultDto>();
+            try
+            {
+                
+                var checkUserExist = await _accountRepo.FindUserByEmailAsync(Email);
+                
+                if (checkUserExist != null)
+                {
+                    var checkPassword = Decrypt(_configuration["EncryptionSettings:GenPass"]).Equals(GenericPassword);
+                    if (checkPassword == false)
+                    {
+                        response.ErrorMessages = new List<string>() { "Invalid Credential" };
+                        response.StatusCode = 400;
+                        response.DisplayMessage = "Error";
+                        return response;
+                    }
+
+                    var generateToken2 = await _generateJwt.GenerateToken(checkUserExist);
+                    if (generateToken2 == null)
+                    {
+                        response.ErrorMessages = new List<string>() { "Error in generating jwt for user" };
+                        response.StatusCode = 501;
+                        response.DisplayMessage = "Error";
+                        return response;
+                    }
+
+                    var getUserRole2 = await _accountRepo.GetUserRoles(checkUserExist);
+                    response.StatusCode = StatusCodes.Status200OK;
+                    response.DisplayMessage = "Successfully login";
+                    response.Result = new LoginResultDto() { Jwt = generateToken2, UserRole = getUserRole2 };
+                    return response;
+
+
+
+                }
+
+                var checkRole = await _accountRepo.RoleExist(Role);
+                if (checkRole == false)
+                {
+                    response.ErrorMessages = new List<string>() { "Role is not available" };
+                    response.StatusCode = StatusCodes.Status404NotFound;
+                    response.DisplayMessage = "Error";
+                    return response;
+                }
+                var mapAccount = new ApplicationUser();
+
+                mapAccount.FirstName =FirstName;
+                mapAccount.LastName = LastName;
+                mapAccount.Country = Country;
+                mapAccount.Email = Email;
+             
+                mapAccount.UserName = Email;
+
+
+                var createUser = await _accountRepo.SignUpAsync(mapAccount, GenericPassword);
+                if (createUser == null)
+                {
+                    response.ErrorMessages = new List<string>() { "User not created successfully" };
+                    response.StatusCode = StatusCodes.Status501NotImplemented;
+                    response.DisplayMessage = "Error";
+                    return response;
+                }
+                var addRole = await _accountRepo.AddRoleAsync(createUser, Role);
+                if (addRole == false)
+                {
+                    response.ErrorMessages = new List<string>() { "Fail to add role to user" };
+                    response.StatusCode = StatusCodes.Status501NotImplemented;
+                    response.DisplayMessage = "Error";
+                    return response;
+                }
+                var GenerateConfirmEmailToken = new ConfirmEmailToken()
+                {
+                    Token = _accountRepo.GenerateConfirmEmailToken(),
+                    UserId = createUser.Id
+                };
+                var Generatetoken = await _accountRepo.SaveGenerateConfirmEmailToken(GenerateConfirmEmailToken);
+                if (Generatetoken == null)
+                {
+                    response.ErrorMessages = new List<string>() { "Fail to generate confirm email token for company" };
+                    response.StatusCode = StatusCodes.Status501NotImplemented;
+                    response.DisplayMessage = "Error";
+                    return response;
+                }
+                var message = new Message(new string[] { createUser.Email }, "Confirm Email Token", $"<p>Your confirm email code is below<p><h6>{GenerateConfirmEmailToken.Token}</h6>");
+                _emailServices.SendEmail(message);
+
+
+                // to be deleted later
+                await _userSubRepo.Add(new UserSubscription()
+                {
+                    SubscriptionId = "f1422e50-47b4-4e4c-830b-4cb310e2c613",
+                    UserId = createUser.Id,
+                    SubscrptionStart = DateTime.UtcNow,
+                    SubscrptionEnd = DateTime.UtcNow.AddMonths(10),
+                });
+
+                var generateToken = await _generateJwt.GenerateToken(checkUserExist);
+                if (generateToken == null)
+                {
+                    response.ErrorMessages = new List<string>() { "Error in generating jwt for user" };
+                    response.StatusCode = 501;
+                    response.DisplayMessage = "Error";
+                    return response;
+                }
+
+                var getUserRole = await _accountRepo.GetUserRoles(checkUserExist);
+                response.StatusCode = StatusCodes.Status200OK;
+                response.DisplayMessage = "Successfully login";
+                response.Result = new LoginResultDto() { Jwt = generateToken, UserRole = getUserRole };
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+                response.ErrorMessages = new List<string>() { "Error in signin user with social media" };
                 response.StatusCode = 500;
                 response.DisplayMessage = "Error";
                 return response;
@@ -642,6 +772,54 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 response.DisplayMessage = "Error";
                 return response;
             }
+        }
+
+        public string Encrypt(string plainText)
+        {
+            byte[] plainTextBytes = Encoding.UTF8.GetBytes(plainText);
+            byte[] nonce = new byte[AesGcm.NonceByteSizes.MaxSize];
+            RandomNumberGenerator.Fill(nonce);
+
+            byte[] cipherText;
+            byte[] tag;
+
+            using (AesGcm aesGcm = new AesGcm(_key))
+            {
+                byte[] encryptedData = new byte[plainTextBytes.Length];
+                byte[] tagBuffer = new byte[AesGcm.TagByteSizes.MaxSize];
+
+                aesGcm.Encrypt(nonce, plainTextBytes, encryptedData, tagBuffer);
+
+                cipherText = new byte[nonce.Length + encryptedData.Length + tagBuffer.Length];
+                Buffer.BlockCopy(nonce, 0, cipherText, 0, nonce.Length);
+                Buffer.BlockCopy(encryptedData, 0, cipherText, nonce.Length, encryptedData.Length);
+                Buffer.BlockCopy(tagBuffer, 0, cipherText, nonce.Length + encryptedData.Length, tagBuffer.Length);
+            }
+
+            return Convert.ToBase64String(cipherText);
+        }
+
+        public string Decrypt(string encryptedText)
+        {
+            byte[] cipherText = Convert.FromBase64String(encryptedText);
+
+            byte[] nonce = new byte[AesGcm.NonceByteSizes.MaxSize];
+            byte[] tag = new byte[AesGcm.TagByteSizes.MaxSize];
+            byte[] encryptedData = new byte[cipherText.Length - nonce.Length - tag.Length];
+
+            Buffer.BlockCopy(cipherText, 0, nonce, 0, nonce.Length);
+            Buffer.BlockCopy(cipherText, nonce.Length, encryptedData, 0, encryptedData.Length);
+            Buffer.BlockCopy(cipherText, nonce.Length + encryptedData.Length, tag, 0, tag.Length);
+
+            byte[] decryptedData;
+
+            using (AesGcm aesGcm = new AesGcm(_key))
+            {
+                decryptedData = new byte[encryptedData.Length];
+                aesGcm.Decrypt(nonce, encryptedData, tag, decryptedData);
+            }
+
+            return Encoding.UTF8.GetString(decryptedData);
         }
 
 

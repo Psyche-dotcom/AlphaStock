@@ -9,6 +9,7 @@ namespace AlpaStock.Infrastructure.Service.Interface
 {
     public interface IAccountService
     {
+        Task<ResponseDto<LoginResultDto>> SignInRegisterSocialAccount(string Email, string LastName, string FirstName, string Role, string Country, string GenericPassword);
         Task<ResponseDto<UserStatisticsResponse>> GetUserStatisticsChartAsync();
         Task<ResponseDto<string>> UploadUserProfilePicture(string email, IFormFile file);
         Task<ResponseDto<string>> UpdateUser(string email, UpdateUserDto updateUser);

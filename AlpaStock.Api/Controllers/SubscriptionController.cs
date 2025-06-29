@@ -1,6 +1,5 @@
 ﻿using AlpaStock.Core.DTOs.Request.Subscription;
 using AlpaStock.Infrastructure.Service.Interface;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AlpaStock.Api.Controllers
@@ -15,12 +14,12 @@ namespace AlpaStock.Api.Controllers
         {
             _subscriptionService = subscriptionService;
         }
-       
+
 
         [HttpPost("create")]
         public async Task<IActionResult> CreateSubscriptions(AddSubPlanReq req)
         {
-           
+
             var result = await _subscriptionService.CreateSubscriptionPlan(req);
 
             if (result.StatusCode == 200 || result.StatusCode == 201)
@@ -35,11 +34,11 @@ namespace AlpaStock.Api.Controllers
             {
                 return BadRequest(result);
             }
-        } 
+        }
         [HttpGet("retrieve/all")]
         public async Task<IActionResult> GetAllSubscriptions()
         {
-           
+
             var result = await _subscriptionService.RetrieveAllPlan();
 
             if (result.StatusCode == 200 || result.StatusCode == 201)
@@ -77,7 +76,7 @@ namespace AlpaStock.Api.Controllers
         [HttpPut("update")]
         public async Task<IActionResult> UpdateSubscriptionAsync(UpdateSubDetails req)
         {
-          
+
             var result = await _subscriptionService.updateSubscriptionPlanDetails(req);
 
             if (result.StatusCode == 200 || result.StatusCode == 201)
@@ -96,7 +95,7 @@ namespace AlpaStock.Api.Controllers
         [HttpPut("feature/update")]
         public async Task<IActionResult> UpdateSubscriptionFeatureAsync(UpdateSubScriptionFeature req)
         {
-          
+
             var result = await _subscriptionService.updateSubscriptionFeature(req);
 
             if (result.StatusCode == 200 || result.StatusCode == 201)
@@ -113,6 +112,6 @@ namespace AlpaStock.Api.Controllers
             }
         }
 
-      
+
     }
 }

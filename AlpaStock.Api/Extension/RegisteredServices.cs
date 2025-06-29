@@ -32,6 +32,7 @@ namespace AlpaStock.Api.Extension
             services.AddScoped<IApiClient, ApiClient>();
             services.AddScoped<IStockStreamService, StockStreamService>();
             services.AddScoped<IStockService, StockService>();
+            services.AddScoped<IStripePaymentService, StripePaymentService>();
             services.AddHttpClient();
         }
     }

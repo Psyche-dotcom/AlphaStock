@@ -9,6 +9,7 @@ namespace AlpaStock.Core.Entities
         public string Amount { get; set; }
         public string OrderReferenceId { get; set; }
         public string Description { get; set; }
+       
         public string PaymentType { get; set; } = "PayPal";
         public DateTime CreatedPaymentTime { get; set; } = DateTime.UtcNow;
         public DateTime CompletePaymentTime { get; set; }

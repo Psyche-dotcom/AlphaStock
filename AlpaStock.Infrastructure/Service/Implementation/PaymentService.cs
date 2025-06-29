@@ -180,13 +180,26 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 retrieveOrder.CompletePaymentTime = DateTime.UtcNow;
                 _paymentRepo.Update(retrieveOrder);
 
-                await _userSubRepo.Add(new UserSubscription()
+                int billingInterval = int.Parse(retrieveOrder.Subscription.BillingInterval);
+                var checkCurrentOrder = await _userSubRepo.GetQueryable().FirstOrDefaultAsync( u=>u.Id == retrieveOrder.SubscriptionId && u.IsActive);
+                if(checkCurrentOrder != null )
                 {
-                    SubscriptionId = retrieveOrder.SubscriptionId,
-                    UserId = retrieveOrder.UserId,
-                    SubscrptionStart = DateTime.UtcNow,
-                    SubscrptionEnd = DateTime.UtcNow.AddMonths(int.Parse(retrieveOrder.Subscription.BillingInterval)),
-                });
+                    checkCurrentOrder.SubscrptionEnd = checkCurrentOrder.SubscrptionEnd.AddMonths(billingInterval);
+                    _userSubRepo.Update(checkCurrentOrder);
+
+
+                }
+                else
+                {
+                    await _userSubRepo.Add(new UserSubscription()
+                    {
+                        SubscriptionId = retrieveOrder.SubscriptionId,
+                        UserId = retrieveOrder.UserId,
+                        SubscrptionStart = DateTime.UtcNow,
+                        SubscrptionEnd = DateTime.UtcNow.AddMonths(billingInterval)
+                    });
+                }
+              
                 await _userSubRepo.SaveChanges();
                 response.StatusCode = StatusCodes.Status200OK;
                 response.DisplayMessage = "Successful";

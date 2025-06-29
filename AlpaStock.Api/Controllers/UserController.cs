@@ -1,5 +1,6 @@
 ﻿using AlpaStock.Core.DTOs.Request.Auth;
 using AlpaStock.Core.DTOs.Request.Notification;
+using AlpaStock.Core.DTOs.Response.Auth;
 using AlpaStock.Infrastructure.Service.Interface;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -25,6 +26,24 @@ namespace AlpaStock.Api.Controllers
         public async Task<IActionResult> Register(SignUp req)
         {
             var result = await _accountService.RegisterUser(req, "User");
+            if (result.StatusCode == 200)
+            {
+                return Ok(result);
+            }
+            else if (result.StatusCode == 404)
+            {
+                return NotFound(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+        } 
+        [HttpPost("user/social/login")]
+        public async Task<IActionResult> SocialLogin(SocialLoginDto req)
+        {
+            var result = await _accountService.SignInRegisterSocialAccount(req.Email,req.LastName,req.FirstName, 
+                "User",req.Country,req.GenericPassword);
             if (result.StatusCode == 200)
             {
                 return Ok(result);

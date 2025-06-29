@@ -19,9 +19,9 @@ namespace AlpaStock.Infrastructure.Service.Interface
         Task<ResponseDto<List<StockResp>>> GetStockQuote(string symbol);
         Task<ResponseDto<List<StockInfo>>> GetOtherStockInfo(string symbol);
         Task<ResponseDto<StockWishListResponseIsadded>> IsAddStockWishList(string userid, string stockSymbol);
-        Task<ResponseDto<IEnumerable<IncomeStatementResp>>> GetStockIncomeStatement(string symbol, string period);
-        Task<ResponseDto<IEnumerable<BalanceSheetResp>>> GetStockBalanceSheet(string symbol, string period);
-        Task<ResponseDto<List<CashFlowStatement>>> GetStockCashFlowStatement(string symbol, string period);
+        Task<ResponseDto<IEnumerable<IncomeStatementResp>>> GetStockIncomeStatement(string symbol, string period, string duration);
+        Task<ResponseDto<IEnumerable<BalanceSheetResp>>> GetStockBalanceSheet(string symbol, string period, string duration);
+        Task<ResponseDto<List<CashFlowStatement>>> GetStockCashFlowStatement(string symbol, string period, string duration);
         Task<ResponseDto<StockAnaResponse>> StockAnalyserResponse(StockAnalyserRequest req);
         Task<ResponseDto<string>> UpdateStockWishList(string stockwishlistId, decimal lowerLimit, decimal upperLimit);
         Task<ResponseDto<string>> DeleteStockWishList(string stockwishlistId);

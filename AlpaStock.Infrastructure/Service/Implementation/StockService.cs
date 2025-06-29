@@ -238,13 +238,13 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 return response;
             }
         }
-        public async Task<ResponseDto<IEnumerable<IncomeStatementResp>>> GetStockIncomeStatement(string symbol, string period)
+        public async Task<ResponseDto<IEnumerable<IncomeStatementResp>>> GetStockIncomeStatement(string symbol, string period, string duration)
         {
             var response = new ResponseDto<IEnumerable<IncomeStatementResp>>();
             try
             {
 
-                var apiUrlIcome = _baseUrl + $"stable/income-statement?symbol={symbol}&period={period}";
+                var apiUrlIcome = _baseUrl + $"stable/income-statement?symbol={symbol}&period={period}&limit={duration}";
                 var makeRequestIncome = await _apiClient.GetAsync<string>(apiUrlIcome);
                 if (!makeRequestIncome.IsSuccessful)
                 {
@@ -279,13 +279,13 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 return response;
             }
         }
-        public async Task<ResponseDto<IEnumerable<BalanceSheetResp>>> GetStockBalanceSheet(string symbol, string period)
+        public async Task<ResponseDto<IEnumerable<BalanceSheetResp>>> GetStockBalanceSheet(string symbol, string period, string duration)
         {
             var response = new ResponseDto<IEnumerable<BalanceSheetResp>>();
             try
             {
 
-                var apiUrlBalance = _baseUrl + $"stable/balance-sheet-statement?symbol={symbol}&period={period}";
+                var apiUrlBalance = _baseUrl + $"stable/balance-sheet-statement?symbol={symbol}&period={period}&limit={duration}";
                 var makeRequestBalance = await _apiClient.GetAsync<string>(apiUrlBalance);
                 if (!makeRequestBalance.IsSuccessful)
                 {
@@ -320,13 +320,13 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 return response;
             }
         }
-        public async Task<ResponseDto<List<CashFlowStatement>>> GetStockCashFlowStatement(string symbol, string period)
+        public async Task<ResponseDto<List<CashFlowStatement>>> GetStockCashFlowStatement(string symbol, string period, string duration)
         {
             var response = new ResponseDto<List<CashFlowStatement>>();
             try
             {
 
-                var apiUrlCash = _baseUrl + $"stable/cash-flow-statement?symbol={symbol}&period={period}";
+                var apiUrlCash = _baseUrl + $"stable/cash-flow-statement?symbol={symbol}&period={period}&limit={duration}";
                 var makeRequestCash = await _apiClient.GetAsync<string>(apiUrlCash);
                 if (!makeRequestCash.IsSuccessful)
                 {
@@ -1191,7 +1191,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     return response;
                 }
                 var resultBalanceTTM = JsonConvert.DeserializeObject<List<BalanceSheetResp>>(makeRequestBalanceTTm.Content);
-                var cashflow = await GetStockCashFlowStatement(symbol, period);
+                var cashflow = await GetStockCashFlowStatement(symbol, period,"5");
                 if (cashflow.StatusCode != 200)
                 {
 

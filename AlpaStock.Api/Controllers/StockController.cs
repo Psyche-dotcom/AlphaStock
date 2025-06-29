@@ -201,9 +201,9 @@ namespace AlpaStock.Api.Controllers
         }
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet("income-statement")]
-        public async Task<IActionResult> GetStockIncomeStatement(string symbol, string period)
+        public async Task<IActionResult> GetStockIncomeStatement(string symbol, string period, string duration)
         {
-            var result = await _stockService.GetStockIncomeStatement(symbol, period);
+            var result = await _stockService.GetStockIncomeStatement(symbol, period,duration);
 
             if (result.StatusCode == 200 || result.StatusCode == 201)
             {
@@ -220,9 +220,9 @@ namespace AlpaStock.Api.Controllers
         }
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet("balance-sheet")]
-        public async Task<IActionResult> GetStockBalanceSheet(string symbol, string period)
+        public async Task<IActionResult> GetStockBalanceSheet(string symbol, string period, string duration)
         {
-            var result = await _stockService.GetStockBalanceSheet(symbol, period);
+            var result = await _stockService.GetStockBalanceSheet(symbol, period,duration);
 
             if (result.StatusCode == 200 || result.StatusCode == 201)
             {
@@ -239,9 +239,9 @@ namespace AlpaStock.Api.Controllers
         }
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet("cash-flow")]
-        public async Task<IActionResult> GetStockCashFlowStatement(string symbol, string period)
+        public async Task<IActionResult> GetStockCashFlowStatement(string symbol, string period, string duration)
         {
-            var result = await _stockService.GetStockCashFlowStatement(symbol, period);
+            var result = await _stockService.GetStockCashFlowStatement(symbol, period, duration);
 
             if (result.StatusCode == 200 || result.StatusCode == 201)
             {
