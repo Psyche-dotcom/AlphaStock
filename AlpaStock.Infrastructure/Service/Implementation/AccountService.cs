@@ -6,6 +6,7 @@ using AlpaStock.Core.Entities;
 using AlpaStock.Core.Repositories.Interface;
 using AlpaStock.Infrastructure.Service.Interface;
 using AutoMapper;
+using Google.Apis.Auth;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -110,13 +111,12 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 _emailServices.SendEmail(message);
 
 
-                // to be deleted later
                 await _userSubRepo.Add(new UserSubscription()
                 {
-                    SubscriptionId = "f1422e50-47b4-4e4c-830b-4cb310e2c613",
+                    SubscriptionId = "314561df-5e86-4269-b97e-d3f55b5d3e99",
                     UserId = createUser.Id,
                     SubscrptionStart = DateTime.UtcNow,
-                    SubscrptionEnd = DateTime.UtcNow.AddMonths(10),
+                    SubscrptionEnd = DateTime.UtcNow.AddDays(7),
                 });
 
                 response.StatusCode = StatusCodes.Status200OK;
@@ -195,24 +195,33 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             }
         }
 
-        public async Task<ResponseDto<LoginResultDto>> SignInRegisterSocialAccount(string Email, string LastName, string FirstName, string Role,string Country, string GenericPassword)
+        public async Task<ResponseDto<LoginResultDto>> SignInRegisterSocialAccount(string token, string GenericPassword)
         {
             var response = new ResponseDto<LoginResultDto>();
             try
             {
-                
-                var checkUserExist = await _accountRepo.FindUserByEmailAsync(Email);
-                
+                var checkPassword = Decrypt(_configuration["EncryptionSettings:GenPass"]).Equals(GenericPassword);
+                if (checkPassword == false)
+                {
+                    response.ErrorMessages = new List<string>() { "Invalid Credential" };
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    return response;
+                }
+                var payload = await GoogleJsonWebSignature.ValidateAsync(token);
+
+                var email = payload.Email;
+                var fullName = payload.Name.Split(" ");
+                var picture = payload.Picture;
+                string LastName = fullName[1];
+                string FirstName = fullName[0];
+
+
+                var checkUserExist = await _accountRepo.FindUserByEmailAsync(email);
+
                 if (checkUserExist != null)
                 {
-                    var checkPassword = Decrypt(_configuration["EncryptionSettings:GenPass"]).Equals(GenericPassword);
-                    if (checkPassword == false)
-                    {
-                        response.ErrorMessages = new List<string>() { "Invalid Credential" };
-                        response.StatusCode = 400;
-                        response.DisplayMessage = "Error";
-                        return response;
-                    }
+
 
                     var generateToken2 = await _generateJwt.GenerateToken(checkUserExist);
                     if (generateToken2 == null)
@@ -233,7 +242,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
 
                 }
 
-                var checkRole = await _accountRepo.RoleExist(Role);
+                var checkRole = await _accountRepo.RoleExist("User");
                 if (checkRole == false)
                 {
                     response.ErrorMessages = new List<string>() { "Role is not available" };
@@ -243,12 +252,11 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 }
                 var mapAccount = new ApplicationUser();
 
-                mapAccount.FirstName =FirstName;
+                mapAccount.FirstName = FirstName;
                 mapAccount.LastName = LastName;
-                mapAccount.Country = Country;
-                mapAccount.Email = Email;
-             
-                mapAccount.UserName = Email;
+                mapAccount.Country = "US";
+                mapAccount.Email = email;
+                mapAccount.UserName = email;
 
 
                 var createUser = await _accountRepo.SignUpAsync(mapAccount, GenericPassword);
@@ -259,7 +267,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     response.DisplayMessage = "Error";
                     return response;
                 }
-                var addRole = await _accountRepo.AddRoleAsync(createUser, Role);
+                var addRole = await _accountRepo.AddRoleAsync(createUser, "User");
                 if (addRole == false)
                 {
                     response.ErrorMessages = new List<string>() { "Fail to add role to user" };
@@ -287,10 +295,10 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 // to be deleted later
                 await _userSubRepo.Add(new UserSubscription()
                 {
-                    SubscriptionId = "f1422e50-47b4-4e4c-830b-4cb310e2c613",
+                    SubscriptionId = "314561df-5e86-4269-b97e-d3f55b5d3e99",
                     UserId = createUser.Id,
                     SubscrptionStart = DateTime.UtcNow,
-                    SubscrptionEnd = DateTime.UtcNow.AddMonths(10),
+                    SubscrptionEnd = DateTime.UtcNow.AddDays(7),
                 });
 
                 var generateToken = await _generateJwt.GenerateToken(checkUserExist);
@@ -317,7 +325,6 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 return response;
             }
         }
-
         public async Task<ResponseDto<UserInfo>> UserInfoAsync(string userId)
         {
             var response = new ResponseDto<UserInfo>();

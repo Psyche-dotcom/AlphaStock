@@ -42,8 +42,7 @@ namespace AlpaStock.Api.Controllers
         [HttpPost("user/social/login")]
         public async Task<IActionResult> SocialLogin(SocialLoginDto req)
         {
-            var result = await _accountService.SignInRegisterSocialAccount(req.Email,req.LastName,req.FirstName, 
-                "User",req.Country,req.GenericPassword);
+            var result = await _accountService.SignInRegisterSocialAccount(req.Token,req.GenericPassword);
             if (result.StatusCode == 200)
             {
                 return Ok(result);
