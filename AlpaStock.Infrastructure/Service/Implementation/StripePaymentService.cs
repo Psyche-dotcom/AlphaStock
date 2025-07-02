@@ -36,7 +36,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
 
 
 
-            StripeConfiguration.ApiKey = _configuration["TestStripeKey:SecretKey"];
+            StripeConfiguration.ApiKey = _configuration["StripeKey:TestSecretKey"];
             var stripePayment = new Payments();
             var response = new ResponseDto<string>();
             try
@@ -111,7 +111,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
         public async Task<ResponseDto<string>> confirmStripepayment(string session_id)
         {
             var response = new ResponseDto<string>();
-            StripeConfiguration.ApiKey = _configuration["TestStripeKey:SecretKey"];
+            StripeConfiguration.ApiKey = _configuration["StripeKey:TestSecretKey"];
             try
             {
                 var retrieveOrder = await _paymentRepo.GetQueryable().Include(u => u.Subscription).
