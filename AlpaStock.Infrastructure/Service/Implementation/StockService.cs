@@ -156,6 +156,47 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 return response;
             }
         }  
+        public async Task<ResponseDto<List<NewsItem>>> GetStockPressGeneralNews(string page, string limit)
+        {
+            var response = new ResponseDto<List<NewsItem>>();
+            try
+            {
+            
+                var apiUrl = _baseUrl + $"stable/news/press-releases-latest?page={page}&limit={limit}";
+                var makeRequest = await _apiClient.GetAsync<string>(apiUrl);
+                if (!makeRequest.IsSuccessful)
+                {
+                    _logger.LogError("stock news press-releases general error mess", makeRequest.ErrorMessage);
+                    _logger.LogError("stock news press-releases general error ex", makeRequest.ErrorException);
+                    _logger.LogError("stock news press-releases general error con", makeRequest.Content);
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Unable to get the stock press-releases news" };
+                    return response;
+                }
+                var result = JsonConvert.DeserializeObject<List<NewsItem>>(makeRequest.Content);
+                if (!result.Any())
+                {
+                    response.StatusCode = 400;
+                    response.DisplayMessage = "Error";
+                    response.ErrorMessages = new List<string>() { "Stock press-releases general news is empty" };
+                    return response;
+                }
+                response.StatusCode = 200;
+                response.DisplayMessage = "Success";
+                response.Result = result;
+                return response;
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"stock news list ex - {ex.Message}", ex);
+                response.ErrorMessages = new List<string> { "Unable to get the general stock press-releases news list at the moment" };
+                response.StatusCode = 500;
+                response.DisplayMessage = "Error";
+                return response;
+            }
+        }  
         public async Task<ResponseDto<List<NewsItem>>> GetGeneralStockNews(string page, string limit)
         {
             var response = new ResponseDto<List<NewsItem>>();

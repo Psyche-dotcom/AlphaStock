@@ -6,6 +6,7 @@ namespace AlpaStock.Infrastructure.Service.Interface
 {
     public interface IStockService
     {
+        Task<ResponseDto<List<NewsItem>>> GetStockPressGeneralNews(string page, string limit);
         Task<ResponseDto<IEnumerable<IncomeStatementResp>>> GetStockIncomeStatementTTM(string symbol, string period);
         Task<ResponseDto<IEnumerable<BalanceSheetResp>>> GetStockBalanceSheetTTM(string symbol, string period);
         Task<ResponseDto<List<CashFlowStatement>>> GetStockCashFlowStatementTTM(string symbol, string period);

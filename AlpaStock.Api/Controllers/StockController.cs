@@ -472,7 +472,7 @@ namespace AlpaStock.Api.Controllers
         }
 
 
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet("news/general")]
         public async Task<IActionResult> GetGeneralStockNews(string page, string limit)
         {
@@ -493,13 +493,33 @@ namespace AlpaStock.Api.Controllers
                 return BadRequest(result);
             }
         }
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+       // [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet("news/press_release")]
         public async Task<IActionResult> GetStockPressNews(string symbol, string page, string limit)
         {
 
 
             var result = await _stockService.GetStockPressNews(symbol, page, limit);
+
+            if (result.StatusCode == 200 || result.StatusCode == 201)
+            {
+                return Ok(result);
+            }
+            else if (result.StatusCode == 404)
+            {
+                return NotFound(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+        } 
+        [HttpGet("news/general/press_release")]
+        public async Task<IActionResult> GetStockGeneralPressNews(string page, string limit)
+        {
+
+
+            var result = await _stockService.GetStockPressGeneralNews( page, limit);
 
             if (result.StatusCode == 200 || result.StatusCode == 201)
             {
