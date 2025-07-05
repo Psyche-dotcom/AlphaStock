@@ -32,4 +32,8 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 
-ENTRYPOINT ["dotnet", "AlpaStock.Api.dll"]
+# Copy entrypoint script
+COPY entrypoint.sh .
+RUN chmod +x ./entrypoint.sh
+
+ENTRYPOINT ["./entrypoint.sh"]
