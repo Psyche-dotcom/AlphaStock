@@ -8,7 +8,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using System.ComponentModel.Design;
 
 namespace AlpaStock.Infrastructure.Service.Implementation
 {
@@ -73,13 +72,13 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 response.DisplayMessage = "Error";
                 return response;
             }
-        } 
+        }
         public async Task<ResponseDto<List<NewsItem>>> GetStockNews(string symbol, string page, string limit)
         {
             var response = new ResponseDto<List<NewsItem>>();
             try
             {
-            
+
                 var apiUrl = _baseUrl + $"stable/news/stock?symbols={symbol}&page={page}&limit={limit}";
                 var makeRequest = await _apiClient.GetAsync<string>(apiUrl);
                 if (!makeRequest.IsSuccessful)
@@ -120,7 +119,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             var response = new ResponseDto<List<NewsItem>>();
             try
             {
-            
+
                 var apiUrl = _baseUrl + $"stable/news/press-releases?symbols={symbol}&page={page}&limit={limit}";
                 var makeRequest = await _apiClient.GetAsync<string>(apiUrl);
                 if (!makeRequest.IsSuccessful)
@@ -155,13 +154,13 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 response.DisplayMessage = "Error";
                 return response;
             }
-        }  
+        }
         public async Task<ResponseDto<List<NewsItem>>> GetStockPressGeneralNews(string page, string limit)
         {
             var response = new ResponseDto<List<NewsItem>>();
             try
             {
-            
+
                 var apiUrl = _baseUrl + $"stable/news/press-releases-latest?page={page}&limit={limit}";
                 var makeRequest = await _apiClient.GetAsync<string>(apiUrl);
                 if (!makeRequest.IsSuccessful)
@@ -196,13 +195,13 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 response.DisplayMessage = "Error";
                 return response;
             }
-        }  
+        }
         public async Task<ResponseDto<List<NewsItem>>> GetGeneralStockNews(string page, string limit)
         {
             var response = new ResponseDto<List<NewsItem>>();
             try
             {
-            
+
                 var apiUrl = _baseUrl + $"stable/news/stock-latest?page={page}&limit={limit}";
                 var makeRequest = await _apiClient.GetAsync<string>(apiUrl);
                 if (!makeRequest.IsSuccessful)
@@ -319,10 +318,10 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 response.DisplayMessage = "Error";
                 return response;
             }
-        }    
-        public async Task<ResponseDto<IEnumerable<IncomeStatementResp>>> GetStockIncomeStatementTTM(string symbol, string period)
+        }
+        public async Task<ResponseDto<List<IncomeStatementResp>>> GetStockIncomeStatementTTM(string symbol, string period)
         {
-            var response = new ResponseDto<IEnumerable<IncomeStatementResp>>();
+            var response = new ResponseDto<List<IncomeStatementResp>>();
             try
             {
 
@@ -341,7 +340,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 var resultIncome2 = JsonConvert.DeserializeObject<List<IncomeStatementResp>>(makeRequestIncome2.Content);
 
 
-               
+
                 response.StatusCode = 200;
                 response.DisplayMessage = "Success";
                 response.Result = resultIncome2;
@@ -397,10 +396,10 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 response.DisplayMessage = "Error";
                 return response;
             }
-        }   
-        public async Task<ResponseDto<IEnumerable<BalanceSheetResp>>> GetStockBalanceSheetTTM(string symbol, string period)
+        }
+        public async Task<ResponseDto<List<BalanceSheetResp>>> GetStockBalanceSheetTTM(string symbol, string period)
         {
-            var response = new ResponseDto<IEnumerable<BalanceSheetResp>>();
+            var response = new ResponseDto<List<BalanceSheetResp>>();
             try
             {
 
@@ -416,7 +415,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     response.ErrorMessages = new List<string>() { "Unable to get the stock balance sheet statement" };
                     return response;
                 }
-                var resultBalance = JsonConvert.DeserializeObject<IEnumerable<BalanceSheetResp>>(makeRequestBalance.Content);
+                var resultBalance = JsonConvert.DeserializeObject<List<BalanceSheetResp>>(makeRequestBalance.Content);
                 if (!resultBalance.Any())
                 {
                     response.StatusCode = 400;
@@ -479,7 +478,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 response.DisplayMessage = "Error";
                 return response;
             }
-        }    
+        }
         public async Task<ResponseDto<List<CashFlowStatement>>> GetStockCashFlowStatementTTM(string symbol, string period)
         {
             var response = new ResponseDto<List<CashFlowStatement>>();
@@ -893,21 +892,23 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 }
 
 
-                var apiUrlIcome = _baseUrl + $"stable/income-statement-ttm?symbol={symbol}&period={period}&limit=5";
-                var makeRequestIncome = await _apiClient.GetAsync<string>(apiUrlIcome);
-                if (!makeRequestIncome.IsSuccessful)
+                var apiUrlIcomeTTM = _baseUrl + $"stable/income-statement-ttm?symbol={symbol}&period={period}&limit=5";
+                var makeRequestIncomeTTM = await _apiClient.GetAsync<string>(apiUrlIcomeTTM);
+                if (!makeRequestIncomeTTM.IsSuccessful)
                 {
-                    _logger.LogError("stock income statement error mess", makeRequestIncome.ErrorMessage);
-                    _logger.LogError("stock income statement error ex", makeRequestIncome.ErrorException);
-                    _logger.LogError("stock income statement error con", makeRequestIncome.Content);
+                    _logger.LogError("stock income statement error mess", makeRequestIncomeTTM.ErrorMessage);
+                    _logger.LogError("stock income statement error ex", makeRequestIncomeTTM.ErrorException);
+                    _logger.LogError("stock income statement error con", makeRequestIncomeTTM.Content);
                     response.StatusCode = 400;
                     response.DisplayMessage = "Error";
                     response.ErrorMessages = new List<string>() { "Unable to get the stock Income statement" };
                     return response;
                 }
-                var resultIncome = JsonConvert.DeserializeObject<List<IncomeStatementResp>>(makeRequestIncome.Content); 
-                
-                var apiUrlIcomeNo = _baseUrl + $"stable/income-statement?symbol={symbol}&period={period}&limit=5";
+                var resultIncomeTTM = JsonConvert.DeserializeObject<List<IncomeStatementResp>>(makeRequestIncomeTTM.Content);
+
+
+
+                var apiUrlIcomeNo = _baseUrl + $"stable/income-statement?symbol={symbol}&period={period}&limit=11";
                 var makeRequestIncomeNo = await _apiClient.GetAsync<string>(apiUrlIcomeNo);
                 if (!makeRequestIncomeNo.IsSuccessful)
                 {
@@ -936,8 +937,8 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 }
 
 
-                var resultCash = JsonConvert.DeserializeObject<List<CashFlowStatement>>(makeRequestCash.Content);  
-                 
+                var resultCashTTM = JsonConvert.DeserializeObject<List<CashFlowStatement>>(makeRequestCash.Content);
+
                 var apiUrlCashNO = _baseUrl + $"stable/cash-flow-statement?symbol={symbol}&period={period}&limit=5";
                 var makeRequestCashNo = await _apiClient.GetAsync<string>(apiUrlCashNO);
                 if (!makeRequestCashNo.IsSuccessful)
@@ -979,49 +980,88 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     return response;
                 }
 
+                var balanceSheetTMM = await GetStockBalanceSheetTTM(symbol, period);
+                if (balanceSheetTMM.StatusCode != 200)
+                {
+                    response.StatusCode = balanceSheetTMM.StatusCode;
+                    response.DisplayMessage = balanceSheetTMM.DisplayMessage;
+                    response.ErrorMessages = balanceSheetTMM.ErrorMessages;
+                    return response;
+                }
 
 
-                metricFirst.MarketCap = result[0].MarketCap.ToString();
+                var marketCap = (getQuote.Result[0].price * (resultIncomeTTM[0].WeightedAverageShsOutDil / 1000000));
+                metricFirst.MarketCap = marketCap.ToString();
+
+                //result[0].MarketCap.ToString();
                 metricFirst.ProfitMarginTTM = resultRatioTTM[0].NetProfitMarginTTM.ToString() + "%";
                 metricFirst.AvgProfitMargin5yrs = ((resultRatio[0].NetProfitMargin + resultRatio[1].NetProfitMargin + resultRatio[2].NetProfitMargin + resultRatio[3].NetProfitMargin + resultRatio[4].NetProfitMargin) / 5).ToString() + "%";
-                metricFirst.RevenueTTM = resultIncome[0].Revenue.ToString();
-                metricFirst.NetIcomeTTM = resultIncome[0].NetIncome.ToString();
-                var netincome5yearsAvg = ((resultIncomeNo[0].NetIncome + resultIncomeNo[1].NetIncome + resultIncomeNo[2].NetIncome + resultIncomeNo[3].NetIncome + resultIncomeNo[4].NetIncome) / 5);
-                metricFirst.NetIcomeTTM5year = netincome5yearsAvg.ToString();
-             
-                metricFirst.PToERatioTTM = resultRatioTTM[0].PriceToEarningsRatioTTM.ToString();
-                metricFirst.PToEAvgNetIncomeFive5yrs = (result[0].MarketCap / netincome5yearsAvg).ToString();
-                metricFirst.PSRatioTTM = resultRatioTTM[0].PriceToSalesRatioTTM.ToString();
-              
-                metricFirst.GrossProfitMarginTTM = resultRatioTTM[0].GrossProfitMarginTTM.ToString() + "%";
+                metricFirst.RevenueTTM = resultIncomeTTM[0].Revenue.ToString();
+                metricFirst.NetIcomeTTM = resultIncomeTTM[0].NetIncome.ToString();
+                if (!(resultIncomeNo.Count < 5))
+                {
+                    var netincome5yearsAvg = ((resultIncomeNo[0].NetIncome + resultIncomeNo[1].NetIncome + resultIncomeNo[2].NetIncome + resultIncomeNo[3].NetIncome + resultIncomeNo[4].NetIncome) / 5);
+                    metricFirst.NetIcomeTTM5year = netincome5yearsAvg.ToString();
+                    metricFirst.PToEAvgNetIncomeFive5yrs = (marketCap / netincome5yearsAvg).ToString();
+                }
+
+
+                metricFirst.PToERatioTTM = (marketCap / resultIncomeTTM[0].NetIncome).ToString();
+                //resultRatioTTM[0].PriceToEarningsRatioTTM.ToString();
+
+                metricFirst.PSRatioTTM = (marketCap / resultIncomeTTM[0].Revenue).ToString();
+
+                metricFirst.GrossProfitMarginTTM = ((resultIncomeTTM[0].Revenue - resultIncomeTTM[0].CostOfRevenue)
+                    / resultIncomeTTM[0].Revenue).ToString() + "%";
+                //resultRatioTTM[0].GrossProfitMarginTTM.ToString() + "%";
+
+                metricSecond.FreeCashFlow = resultCashTTM[0].FreeCashFlow.ToString();
+                if (!(resultCashNo.Count < 5))
+                {
+                    metricSecond.AvgFCF5Yrs = ((resultCashNo[0].FreeCashFlow + resultCashNo[1].FreeCashFlow +
+                        resultCashNo[2].FreeCashFlow + resultCashNo[3].FreeCashFlow + resultCashNo[4].FreeCashFlow) / 5).ToString();
+
+                }
+                metricSecond.PriceToFCFTTM = (marketCap / resultCashTTM[0].FreeCashFlow).ToString();
 
 
                 metricSecond.EnterpriseValue = result[0].EnterpriseValue.ToString();
-                metricSecond.EVToNet = (result[0].EnterpriseValue / resultIncome[0].NetIncome).ToString();
-             
-                metricSecond.EVToFCF = result[0].EvToFreeCashFlow.ToString();
-                metricSecond.FreeCashFlow = resultCash[0].FreeCashFlow.ToString();
-                metricSecond.PriceToFCFTTM = (result[0].MarketCap / resultCash[0].FreeCashFlow).ToString();
-                metricSecond.AvgFCF5Yrs = ((resultCashNo[0].FreeCashFlow + resultCashNo[1].FreeCashFlow + resultCashNo[2].FreeCashFlow + resultCashNo[3].FreeCashFlow + resultCashNo[4].FreeCashFlow) / 5).ToString();
-                metricSecond.DividendsYieldTTM = resultRatioTTM[0].DividendYieldTTM.ToString() + "%";
-              
+                metricSecond.EVToNet = (result[0].EnterpriseValue / resultIncomeTTM[0].NetIncome).ToString();
+
+                metricSecond.EVToFCF = (result[0].EnterpriseValue / resultCashTTM[0].FreeCashFlow).ToString();
+                metricSecond.DividendsYieldTTM = (resultCashTTM[0].CommonDividendsPaid / marketCap).ToString() + "%";
+                metricSecond.DividendsPaidTTM = (resultCashTTM[0].CommonDividendsPaid).ToString();
 
 
 
-                metricThird.ReturnOnAsset = result[0].ReturnOnAssets.ToString() + "%";
-                metricThird.CompRevGrowth3yrs = resultGrowth[2].GrowthRevenue.ToString() + "%";
-                metricThird.CompRevGrowth5yrs = resultGrowth[4].GrowthRevenue.ToString() + "%";
-                metricThird.CompRevGrowth10yrs = resultGrowth[9].GrowthRevenue.ToString() + "%";
-                metricThird.PriceToBookRatio = resultRatio[0].PriceToBookRatio.ToString();
-                metricThird.ReturnOnInvestedCapitalTTM = resultTTM[0].ReturnOnInvestedCapitalTTM.ToString() + "%";
-                metricThird.AvgROIC5yrs = getStockAnalyzer.Result.ROIC.Fifth + "%";
+
+                metricThird.ReturnOnAsset = (resultIncomeTTM[0].NetIncome / balanceSheetTMM.Result[0].TotalAssets).ToString() + "%";
+                metricThird.ReturnOnEquity = (resultCashTTM[0].FreeCashFlow / balanceSheetTMM.Result[0].TotalEquity).ToString() + "%";
+                if (!(resultIncomeNo.Count < 3))
+                {
+                    metricThird.CompRevGrowth3yrs = (Math.Pow((double)resultIncomeNo[0].Revenue / (double)resultIncomeNo[2].Revenue, 1.0 / 3.0) - 1).ToString() + "%";
+                }
+                else if (!(resultIncomeNo.Count < 5))
+                {
+                    metricThird.CompRevGrowth5yrs = (Math.Pow((double)resultIncomeNo[0].Revenue / (double)resultIncomeNo[4].Revenue, 1.0 / 5.0) - 1).ToString() + "%";
+                }
+                else if (!(resultIncomeNo.Count < 10))
+                {
+                    metricThird.CompRevGrowth10yrs = (Math.Pow((double)resultIncomeNo[0].Revenue / (double)resultIncomeNo[9].Revenue, 1.0 / 10.0) - 1).ToString() + "%";
+                }
 
 
 
-              
+                metricThird.PriceToBookRatio = (marketCap / balanceSheetTMM.Result[0].TotalEquity).ToString();
+                metricThird.ReturnOnInvestedCapitalTTM = getStockAnalyzer.Result.ROIC.First;
+                metricThird.AvgROIC5yrs = getStockAnalyzer.Result.ROIC.Fifth;
+
+
+
+
                 metricFourth.AYearHigh = getQuote.Result[0].yearHigh.ToString();
                 metricFourth.AYearlow = getQuote.Result[0].yearLow.ToString();
-                
+
                 var resultFinal = new FundamentalMetricData();
 
                 resultFinal.metricFirst = metricFirst;
@@ -1173,7 +1213,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 PERatio.First = $"{pe:F2}";
                 PFCF.First = $"{pfcf:F2}";
 
-               
+
 
                 var latestPrice1 = getQuote.Result[0].price;
                 var latestIncomeStatement1 = resultIncome[4];
@@ -1247,6 +1287,14 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             try
             {
                 var resp = new List<Alpha8PillerResp>();
+                var getQuote = await GetStockQuote(symbol);
+                if (getQuote.StatusCode != 200)
+                {
+                    response.StatusCode = getQuote.StatusCode;
+                    response.DisplayMessage = getQuote.DisplayMessage;
+                    response.ErrorMessages = getQuote.ErrorMessages;
+                    return response;
+                }
                 var apiUrlIcome = _baseUrl + $"stable/income-statement?symbol={symbol}&period={period}&limit=5";
                 var makeRequestIncome = await _apiClient.GetAsync<string>(apiUrlIcome);
                 if (!makeRequestIncome.IsSuccessful)
@@ -1260,6 +1308,15 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     return response;
                 }
                 var resultIncome = JsonConvert.DeserializeObject<List<IncomeStatementResp>>(makeRequestIncome.Content);
+
+                var resultIncomeTTM = await GetStockIncomeStatementTTM(symbol, period);
+                if (resultIncomeTTM.StatusCode != 200)
+                {
+                    response.StatusCode = resultIncomeTTM.StatusCode;
+                    response.DisplayMessage = resultIncomeTTM.DisplayMessage;
+                    response.ErrorMessages = resultIncomeTTM.ErrorMessages;
+                    return response;
+                }
 
 
                 var apiUrlKey = _baseUrl + $"stable/key-metrics?symbol={symbol}&limit=5&period={period}";
@@ -1282,18 +1339,21 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     response.ErrorMessages = new List<string>() { "Stock key-metrics is empty" };
                     return response;
                 }
+
+                var marketCap = (getQuote.Result[0].price * (resultIncomeTTM.Result[0].WeightedAverageShsOutDil / 1000000));
                 var netincome5yearsAvg = ((resultIncome[0].NetIncome + resultIncome[1].NetIncome + resultIncome[2].NetIncome + resultIncome[3].NetIncome + resultIncome[4].NetIncome) / 5);
-                var avgPe = resultKey[0].MarketCap / netincome5yearsAvg;
+                var avgPe = marketCap / netincome5yearsAvg;
                 resp.Add(new Alpha8PillerResp()
                 {
                     header = "P/E Avg Net Income (5 yr) < 22",
                     amount = FormatNumber((double)avgPe),
                     isActive = Compare("22", (double)avgPe, ">")
                 });
+                var diffIncome = resultIncome[0].NetIncome - resultIncome[4].NetIncome;
                 resp.Add(new Alpha8PillerResp()
                 {
                     header = "Net Income Growth (5 yr)",
-                    amount = FormatNumber((double)resultIncome[0].NetIncome),
+                    amount = FormatNumber((double)diffIncome),
                     isActive = Compare(resultIncome[0].NetIncome.ToString(), (double)resultIncome[4].NetIncome, ">")
                 });
                 var getStockAnalyzer = await StockAnalyserRequest(symbol, period);
@@ -1311,11 +1371,12 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     amount = getStockAnalyzer.Result.ROIC.Fifth,
                     isActive = Compare2(getStockAnalyzer.Result.ROIC.Fifth, "10%", ">")
                 });
+                var difReveG = resultIncome[0].Revenue - resultIncome[4].Revenue;
                 resp.Add(new Alpha8PillerResp()
                 {
                     header = "Revenue Growth (5 yr)",
-                    amount = getStockAnalyzer.Result.RevGrowth.First,
-                    isActive = Compare2(getStockAnalyzer.Result.RevGrowth.First,getStockAnalyzer.Result.RevGrowth.Fifth, ">")
+                    amount =FormatNumber((double)difReveG),
+                    isActive = Compare2(resultIncome[0].Revenue.ToString(), resultIncome[4].Revenue.ToString(), ">")
                 });
 
                 var apiUrlIcome2 = _baseUrl + $"stable/income-statement-ttm?symbol={symbol}&period={period}&limit=5";
@@ -1331,10 +1392,11 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     return response;
                 }
                 var resultIncome2 = JsonConvert.DeserializeObject<List<IncomeStatementResp>>(makeRequestIncome2.Content);
+                var weighted = ((resultIncome[0].WeightedAverageShsOutDil / resultIncome[4].WeightedAverageShsOutDil) - 1.0) * 100;
                 resp.Add(new Alpha8PillerResp()
                 {
                     header = "Shares Outstanding Decrease (5 yr)",
-                    amount = FormatNumber(double.Parse(resultIncome2[0].WeightedAverageShsOutDil.ToString())),
+                    amount = FormatNumber(double.Parse(weighted.ToString()))+"%",
                     isActive = Compare(resultIncome2[0].WeightedAverageShsOutDil.ToString(), double.Parse(resultIncome[0].WeightedAverageShsOutDil.ToString()), "<")
                 });
 
@@ -1351,7 +1413,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     return response;
                 }
                 var resultBalanceTTM = JsonConvert.DeserializeObject<List<BalanceSheetResp>>(makeRequestBalanceTTm.Content);
-                var cashflow = await GetStockCashFlowStatement(symbol, period,"5");
+                var cashflow = await GetStockCashFlowStatement(symbol, period, "5");
                 if (cashflow.StatusCode != 200)
                 {
 
@@ -1360,27 +1422,39 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     response.ErrorMessages = cashflow.ErrorMessages;
                     return response;
                 }
-                var avgCashflow = ((cashflow.Result[0].FreeCashFlow + 
-                    cashflow.Result[1].FreeCashFlow + 
+                var avgCashflow = ((cashflow.Result[0].FreeCashFlow +
+                    cashflow.Result[1].FreeCashFlow +
                     cashflow.Result[2].FreeCashFlow +
-                    cashflow.Result[3].FreeCashFlow + 
+                    cashflow.Result[3].FreeCashFlow +
                     cashflow.Result[4].FreeCashFlow) / 5);
                 var ltl = resultBalanceTTM[0].TotalCurrentLiabilities / avgCashflow;
+
+                var cashTTM = await GetStockCashFlowStatementTTM(symbol, period);
+                if (cashTTM.StatusCode != 200)
+                {
+                    response.StatusCode = cashTTM.StatusCode;
+                    response.DisplayMessage = cashTTM.DisplayMessage;
+                    response.ErrorMessages = cashTTM.ErrorMessages;
+                    return response;
+                }
+
+                var diff = resultBalanceTTM[0].TotalCurrentLiabilities / cashTTM.Result[0].FreeCashFlow;
                 resp.Add(new Alpha8PillerResp()
                 {
                     header = "LTL/Avg FCF (5 yr) < 5",
-                    amount =FormatNumber((double)ltl),
+                    amount = FormatNumber((double)diff),
                     isActive = Compare(ltl.ToString(), 5, "<")
                 });
+                var diffFCF = cashflow.Result[0].FreeCashFlow -  cashflow.Result[4].FreeCashFlow;
                 resp.Add(new Alpha8PillerResp()
                 {
                     header = "FCF Growth (5 yr)",
-                    amount =FormatNumber((double)cashflow.Result[0].FreeCashFlow),
-                    isActive = Compare(cashflow.Result[0].FreeCashFlow.ToString(),(double) cashflow.Result[4].FreeCashFlow, ">")
+                    amount = FormatNumber((double)diffFCF),
+                    isActive = Compare(cashflow.Result[0].FreeCashFlow.ToString(), (double)cashflow.Result[4].FreeCashFlow, ">")
                 });
 
 
-                var avgFCF = resultKey[0].MarketCap / avgCashflow;
+                var avgFCF = marketCap / avgCashflow;
                 resp.Add(new Alpha8PillerResp()
                 {
                     header = "P/Avg FCF (5 yr) < 22",
@@ -1388,7 +1462,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     isActive = Compare("22", (double)avgFCF, ">")
                 });
 
-              
+
                 response.StatusCode = 200;
                 response.DisplayMessage = "Success";
                 response.Result = resp;
@@ -1771,7 +1845,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             {
                 var DiscountedEarningsValue = new DiscountedEarningsValue();
                 var DiscountedFreeCashFlowValue = new DiscountedFreeCashFlowValue();
-                
+
                 var apiUrlIcome = _baseUrl + $"stable/income-statement-ttm?symbol={req.symbol}&period=annual&limit=1";
                 var makeRequestIncome = await _apiClient.GetAsync<string>(apiUrlIcome);
                 if (!makeRequestIncome.IsSuccessful)
@@ -1809,7 +1883,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 double presentValueMarketCapCashFlowLow = futureMarketCapCashFlowLow / Math.Pow(1 + (req.DesiredAnnReturn.low / 100), req.years);
                 double presentValuePricePerShareCashFlowLow = presentValueMarketCapCashFlowLow / AverageDiluted;
 
-                if(req.selection == 1)
+                if (req.selection == 1)
                 {
                     DiscountedEarningsValue.Low = presentValuePricePerShareLow;
                     DiscountedFreeCashFlowValue.Low = presentValuePricePerShareCashFlowLow;
@@ -1881,7 +1955,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 }
 
 
-               
+
 
 
                 result.DiscountedFreeCashFlowValue = DiscountedFreeCashFlowValue;

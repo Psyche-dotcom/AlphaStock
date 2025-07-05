@@ -6,6 +6,7 @@
         public string AvgFCF5Yrs { get; set; }
         public string PriceToFCFTTM { get; set; }
         public string DividendsYieldTTM { get; set; }
+        public string DividendsPaidTTM { get; set; }
         public string EnterpriseValue { get; set; }
         public string EVToNet { get; set; }
         public string EVToFCF { get; set; }
