@@ -34,9 +34,10 @@ namespace AlpaStock.Infrastructure.Service.Implementation
         public async Task<ResponseDto<string>> IntializeStripepayment(string planid, string userid)
         {
 
+            var key = _configuration["StripeKey:TestSecretKey"];
+            _logger.LogInformation("Key pcik", key);
 
-
-            StripeConfiguration.ApiKey = _configuration["StripeKey:TestSecretKey"];
+            StripeConfiguration.ApiKey = key;
             var stripePayment = new Payments();
             var response = new ResponseDto<string>();
             try
