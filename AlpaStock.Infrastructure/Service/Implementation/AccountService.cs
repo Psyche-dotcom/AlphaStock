@@ -162,14 +162,14 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     return response;
                 }
                 // to be uncomment later
-               /* if (!checkUserExist.EmailConfirmed)
-                {
-                    response.ErrorMessages = new List<string>() { "Please confirm your email address" };
-                    response.StatusCode = 400;
-                    response.DisplayMessage = "Error";
-                    return response;
+                /* if (!checkUserExist.EmailConfirmed)
+                 {
+                     response.ErrorMessages = new List<string>() { "Please confirm your email address" };
+                     response.StatusCode = 400;
+                     response.DisplayMessage = "Error";
+                     return response;
 
-                }*/
+                 }*/
                 var generateToken = await _generateJwt.GenerateToken(checkUserExist);
                 if (generateToken == null)
                 {
@@ -340,17 +340,34 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 }
                 var subActive = fetchUser.Subscriptions.Any(s => s.IsActive);
                 var accessModule = new List<string>();
+                var userSub = new UserSubscription();
                 if (subActive)
                 {
-                    var current = fetchUser.Subscriptions
-                    .FirstOrDefault(s => s.IsActive).Subscription.SubscriptionFeatures;
-                    foreach (var subscriptionFetures in current)
+                    var expiredSubscriptions = await _userSubRepo.GetQueryable()
+                        .Where(us => us.SubscrptionEnd <= DateTime.UtcNow && us.IsActive).ToListAsync();
+
+                    foreach (var subscription in expiredSubscriptions)
                     {
-                        if (subscriptionFetures.CurrentState != "False")
+                        subscription.IsActive = false;
+                        _userSubRepo.Update(subscription);
+                    }
+
+                    await _userSubRepo.SaveChanges();
+
+                    var current = await _userSubRepo.GetQueryable().Include(s => s.Subscription).
+                        ThenInclude(m => m.SubscriptionFeatures).FirstOrDefaultAsync(s => s.IsActive);
+                    if (current != null)
+                    {
+                        userSub = current;
+                        foreach (var subscriptionFetures in current.Subscription.SubscriptionFeatures)
                         {
-                            accessModule.Add(subscriptionFetures.ShortName);
+                            if (subscriptionFetures.CurrentState != "False")
+                            {
+                                accessModule.Add(subscriptionFetures.ShortName);
+                            }
                         }
                     }
+
                 }
                 var result = new UserInfo()
                 {
@@ -363,10 +380,9 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     PhoneNumber = fetchUser.PhoneNumber,
                     isSuspended = fetchUser.isSuspended,
                     IsEmailConfirmed = fetchUser.EmailConfirmed,
-                    ActiveSubcriptionName = fetchUser.Subscriptions
-                    .FirstOrDefault(s => s.IsActive) != null ? fetchUser.Subscriptions
-                    .FirstOrDefault(s => s.IsActive).Subscription.Name : null,
-                    isSubActive = subActive,
+                    ActiveSubcriptionName = userSub != null ? userSub.Subscription.Name : null,
+                    ActiveSubcriptionEndDate = userSub != null ? userSub.SubscrptionEnd : default,
+                    isSubActive = userSub != null,
                     ProfilePicture = fetchUser.ProfilePicture,
                     Created = fetchUser.Created,
                     AccessibleModule = accessModule
