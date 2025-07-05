@@ -35,7 +35,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
         {
 
             var key = _configuration["StripeKey:TestSecretKey"];
-            _logger.LogInformation("Key pcik", key);
+            _logger.LogInformation($"Key pcik::: {key}");
 
             StripeConfiguration.ApiKey = key;
             var stripePayment = new Payments();
