@@ -939,7 +939,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
 
                 var resultCashTTM = JsonConvert.DeserializeObject<List<CashFlowStatement>>(makeRequestCash.Content);
 
-                var apiUrlCashNO = _baseUrl + $"stable/cash-flow-statement?symbol={symbol}&period={period}&limit=5";
+                var apiUrlCashNO = _baseUrl + $"stable/cash-flow-statement?symbol={symbol}&period={period}&limit=11";
                 var makeRequestCashNo = await _apiClient.GetAsync<string>(apiUrlCashNO);
                 if (!makeRequestCashNo.IsSuccessful)
                 {
@@ -1005,11 +1005,11 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     metricFirst.PToEAvgNetIncomeFive5yrs = (marketCap / netincome5yearsAvg).ToString();
                 }
 
-
-                metricFirst.PToERatioTTM = (marketCap / resultIncomeTTM[0].NetIncome).ToString();
+                var pt = (marketCap / resultIncomeTTM[0].NetIncome);
+                metricFirst.PToERatioTTM = $"{pt:F2}";
                 //resultRatioTTM[0].PriceToEarningsRatioTTM.ToString();
-
-                metricFirst.PSRatioTTM = (marketCap / resultIncomeTTM[0].Revenue).ToString();
+                var ps = marketCap / resultIncomeTTM[0].Revenue;
+                metricFirst.PSRatioTTM = $"{ps:F2}";
 
                 metricFirst.GrossProfitMarginTTM = ((resultIncomeTTM[0].Revenue - resultIncomeTTM[0].CostOfRevenue)
                     / resultIncomeTTM[0].Revenue).ToString() + "%";
@@ -1022,7 +1022,8 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                         resultCashNo[2].FreeCashFlow + resultCashNo[3].FreeCashFlow + resultCashNo[4].FreeCashFlow) / 5).ToString();
 
                 }
-                metricSecond.PriceToFCFTTM = (marketCap / resultCashTTM[0].FreeCashFlow).ToString();
+                var pf = marketCap / resultCashTTM[0].FreeCashFlow;
+                metricSecond.PriceToFCFTTM = $"{pf:F2}";
 
 
                 metricSecond.EnterpriseValue = result[0].EnterpriseValue.ToString();
@@ -1051,8 +1052,8 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 }
 
 
-
-                metricThird.PriceToBookRatio = (marketCap / balanceSheetTMM.Result[0].TotalEquity).ToString();
+                var pb = marketCap / balanceSheetTMM.Result[0].TotalEquity;
+                metricThird.PriceToBookRatio = $"{pb:F2}";
                 metricThird.ReturnOnInvestedCapitalTTM = getStockAnalyzer.Result.ROIC.First;
                 metricThird.AvgROIC5yrs = getStockAnalyzer.Result.ROIC.Fifth;
 
