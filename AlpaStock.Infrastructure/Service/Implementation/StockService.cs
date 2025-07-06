@@ -990,7 +990,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 }
 
 
-                var marketCap = (getQuote.Result[0].price * (resultIncomeTTM[0].WeightedAverageShsOutDil / 1000000));
+                var marketCap = (getQuote.Result[0].price * (resultIncomeTTM[0].WeightedAverageShsOutDil));
                 metricFirst.MarketCap = marketCap.ToString();
 
                 //result[0].MarketCap.ToString();
@@ -1042,11 +1042,11 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 {
                     metricThird.CompRevGrowth3yrs = (Math.Pow((double)resultIncomeNo[0].Revenue / (double)resultIncomeNo[2].Revenue, 1.0 / 3.0) - 1).ToString() + "%";
                 }
-                else if ((resultIncomeNo.Count > 4))
+                 if ((resultIncomeNo.Count > 4))
                 {
                     metricThird.CompRevGrowth5yrs = (Math.Pow((double)resultIncomeNo[0].Revenue / (double)resultIncomeNo[4].Revenue, 1.0 / 5.0) - 1).ToString() + "%";
                 }
-                else if ((resultIncomeNo.Count > 9))
+                if ((resultIncomeNo.Count > 9))
                 {
                     metricThird.CompRevGrowth10yrs = (Math.Pow((double)resultIncomeNo[0].Revenue / (double)resultIncomeNo[9].Revenue, 1.0 / 10.0) - 1).ToString() + "%";
                 }
@@ -1351,7 +1351,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                     return response;
                 }
 
-                var marketCap = (getQuote.Result[0].price * (resultIncomeTTM.Result[0].WeightedAverageShsOutDil / 1000000));
+                var marketCap = (getQuote.Result[0].price * (resultIncomeTTM.Result[0].WeightedAverageShsOutDil));
                 var netincome5yearsAvg = ((resultIncome[0].NetIncome + resultIncome[1].NetIncome + resultIncome[2].NetIncome + resultIncome[3].NetIncome + resultIncome[4].NetIncome) / 5);
                 var avgPe = marketCap / netincome5yearsAvg;
                 resp.Add(new Alpha8PillerResp()
