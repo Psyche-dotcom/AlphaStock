@@ -175,7 +175,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
             var response = new ResponseDto<IEnumerable<Subscription>>();
             try
             {
-                var GetAllPlan = await _subscriptionRepo.GetQueryable().OrderBy(u=>u.Amount)
+                var GetAllPlan = await _subscriptionRepo.GetQueryable().OrderBy(u=>u.Amount).Where(u=>u.Id != "314561df-5e86-4269-b97e-d3f55b5d3e99")
                     .ToListAsync();
 
                 response.StatusCode = 200;

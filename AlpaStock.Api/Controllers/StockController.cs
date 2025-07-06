@@ -313,7 +313,7 @@ namespace AlpaStock.Api.Controllers
             }
         }
 
-       [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+       //[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet("fundamental-metric")]
         public async Task<IActionResult> FundamentalMetricDatas(string symbol, string period)
         {
@@ -332,8 +332,8 @@ namespace AlpaStock.Api.Controllers
                 return BadRequest(result);
             }
         }
-        [AllowAnonymous]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+      
+       // [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet("alpha-8-piller-screener")]
         public async Task<IActionResult> AlphaStock8Pillers(string symbol, string period)
         {
@@ -352,7 +352,7 @@ namespace AlpaStock.Api.Controllers
                 return BadRequest(result);
             }
         }
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+       // [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet("stock-analyer-stats")]
         public async Task<IActionResult> StockAnalyzerStats(string symbol, string period)
         {

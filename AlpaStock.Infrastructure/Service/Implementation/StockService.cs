@@ -995,11 +995,11 @@ namespace AlpaStock.Infrastructure.Service.Implementation
 
                 //result[0].MarketCap.ToString();
                 metricFirst.ProfitMarginTTM = resultRatioTTM[0].NetProfitMarginTTM.ToString() + "%";
-                metricFirst.AvgProfitMargin5yrs = ((resultRatio[0].NetProfitMargin + resultRatio[1].NetProfitMargin + resultRatio[2].NetProfitMargin + resultRatio[3].NetProfitMargin + resultRatio[4].NetProfitMargin) / 5).ToString() + "%";
                 metricFirst.RevenueTTM = resultIncomeTTM[0].Revenue.ToString();
                 metricFirst.NetIcomeTTM = resultIncomeTTM[0].NetIncome.ToString();
                 if (!(resultIncomeNo.Count < 5))
                 {
+                metricFirst.AvgProfitMargin5yrs = ((resultRatio[0].NetProfitMargin + resultRatio[1].NetProfitMargin + resultRatio[2].NetProfitMargin + resultRatio[3].NetProfitMargin + resultRatio[4].NetProfitMargin) / 5).ToString() + "%";
                     var netincome5yearsAvg = ((resultIncomeNo[0].NetIncome + resultIncomeNo[1].NetIncome + resultIncomeNo[2].NetIncome + resultIncomeNo[3].NetIncome + resultIncomeNo[4].NetIncome) / 5);
                     metricFirst.NetIcomeTTM5year = netincome5yearsAvg.ToString();
                     metricFirst.PToEAvgNetIncomeFive5yrs = (marketCap / netincome5yearsAvg).ToString();
@@ -1038,15 +1038,15 @@ namespace AlpaStock.Infrastructure.Service.Implementation
 
                 metricThird.ReturnOnAsset = (resultIncomeTTM[0].NetIncome / balanceSheetTMM.Result[0].TotalAssets).ToString() + "%";
                 metricThird.ReturnOnEquity = (resultCashTTM[0].FreeCashFlow / balanceSheetTMM.Result[0].TotalEquity).ToString() + "%";
-                if (!(resultIncomeNo.Count < 3))
+                if ((resultIncomeNo.Count > 2))
                 {
                     metricThird.CompRevGrowth3yrs = (Math.Pow((double)resultIncomeNo[0].Revenue / (double)resultIncomeNo[2].Revenue, 1.0 / 3.0) - 1).ToString() + "%";
                 }
-                else if (!(resultIncomeNo.Count < 5))
+                else if ((resultIncomeNo.Count > 4))
                 {
                     metricThird.CompRevGrowth5yrs = (Math.Pow((double)resultIncomeNo[0].Revenue / (double)resultIncomeNo[4].Revenue, 1.0 / 5.0) - 1).ToString() + "%";
                 }
-                else if (!(resultIncomeNo.Count < 10))
+                else if ((resultIncomeNo.Count > 9))
                 {
                     metricThird.CompRevGrowth10yrs = (Math.Pow((double)resultIncomeNo[0].Revenue / (double)resultIncomeNo[9].Revenue, 1.0 / 10.0) - 1).ToString() + "%";
                 }
@@ -1055,7 +1055,11 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 var pb = marketCap / balanceSheetTMM.Result[0].TotalEquity;
                 metricThird.PriceToBookRatio = $"{pb:F2}";
                 metricThird.ReturnOnInvestedCapitalTTM = getStockAnalyzer.Result.ROIC.First;
-                metricThird.AvgROIC5yrs = getStockAnalyzer.Result.ROIC.Fifth;
+                if(!string.IsNullOrEmpty(getStockAnalyzer.Result.ROIC.Fifth))
+                {
+                    metricThird.AvgROIC5yrs = getStockAnalyzer.Result.ROIC.Fifth;
+                }
+               
 
 
 
@@ -1180,6 +1184,7 @@ namespace AlpaStock.Infrastructure.Service.Implementation
 
                 var fcfMargins = new List<double>();
                 var roics = new List<double>();
+                int count = Math.Min(Math.Min(resultIncome.Count, resultBalance.Count), resultCash.Count);
 
                 for (int i = 0; i < resultIncome.Count && i < 10; i++)
                 {
@@ -1215,20 +1220,23 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 PFCF.First = $"{pfcf:F2}";
 
 
+                if (count > 4)
+                {
 
-                var latestPrice1 = getQuote.Result[0].price;
-                var latestIncomeStatement1 = resultIncome[4];
-                var latestBalanceSheet1 = resultBalance[4];
-                var latestCashFlow1 = resultCash[4];
-
-
-                var netIncome1 = latestIncomeStatement1.NetIncome;
-                var revenue1 = latestIncomeStatement1.Revenue;
+                    var latestPrice1 = getQuote.Result[0].price;
+                    var latestIncomeStatement1 = resultIncome[4];
+                    var latestBalanceSheet1 = resultBalance[4];
+                    var latestCashFlow1 = resultCash[4];
 
 
+                    var netIncome1 = latestIncomeStatement1.NetIncome;
+                    var revenue1 = latestIncomeStatement1.Revenue;
 
-                double profitMargin1 = (double)(netIncome1 / revenue1);
-                double revenueGrowth1 = CalculateCAGR((double)resultIncome[0].Revenue, (double)resultIncome[4].Revenue, 5);
+
+
+                    double profitMargin1 = (double)(netIncome1 / revenue1);
+                    double revenueGrowth1 = CalculateCAGR((double)resultIncome[0].Revenue, (double)resultIncome[4].Revenue, 5);
+              
 
 
                 ROIC.Fifth = $"{roics.Take(5).Average():F2}%";
@@ -1236,27 +1244,29 @@ namespace AlpaStock.Infrastructure.Service.Implementation
                 ProfitMargin.Fifth = (profitMargin1 * 100).ToString();
                 FreeCashFlowMargin.Fifth = $"{fcfMargins.Take(5).Average():F2}%";
 
+                }
+                if (count > 9)
+                {
+
+                    var latestPrice2 = getQuote.Result[0].price;
+                    var latestIncomeStatement2 = resultIncome[9];
+                    var latestBalanceSheet2 = resultBalance[9];
+                    var latestCashFlow2 = resultCash[9];
 
 
-                var latestPrice2 = getQuote.Result[0].price;
-                var latestIncomeStatement2 = resultIncome[9];
-                var latestBalanceSheet2 = resultBalance[9];
-                var latestCashFlow2 = resultCash[9];
+                    var netIncome2 = latestIncomeStatement2.NetIncome;
+                    var revenue2 = latestIncomeStatement2.Revenue;
 
 
-                var netIncome2 = latestIncomeStatement2.NetIncome;
-                var revenue2 = latestIncomeStatement2.Revenue;
+                    double profitMargin2 = (double)(netIncome2 / revenue2);
+                    double revenueGrowth2 = CalculateCAGR((double)resultIncome[0].Revenue, (double)resultIncome[9].Revenue, 10);
 
 
-                double profitMargin2 = (double)(netIncome2 / revenue2);
-                double revenueGrowth2 = CalculateCAGR((double)resultIncome[0].Revenue, (double)resultIncome[9].Revenue, 10);
-
-
-                ROIC.Ten = $"{roics.Take(10).Average():F2}%";
-                RevenueGrowth.Ten = $"{revenueGrowth2:F2}" + "%";
-                ProfitMargin.Ten = (profitMargin2 * 100).ToString();
-                FreeCashFlowMargin.Ten = $"{fcfMargins.Take(10).Average():F2}%";
-
+                    ROIC.Ten = $"{roics.Take(10).Average():F2}%";
+                    RevenueGrowth.Ten = $"{revenueGrowth2:F2}" + "%";
+                    ProfitMargin.Ten = (profitMargin2 * 100).ToString();
+                    FreeCashFlowMargin.Ten = $"{fcfMargins.Take(10).Average():F2}%";
+                }
 
                 response.StatusCode = 200;
                 response.DisplayMessage = "Success";
