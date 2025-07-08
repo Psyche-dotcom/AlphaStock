@@ -103,12 +103,12 @@ namespace AlpaStock.Api.Controllers
 
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpPost("comment/reply/add")]
-        public async Task<IActionResult> AddCommentReply(AddCommentReplyReq req)
+        public async Task<IActionResult> AddCommentReply(AddCommentReplyReq REQUEST)
         {
             var userid = User.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Jti)?.Value;
 
 
-            var result = await _blogService.BlogCommentReply(req, userid);
+            var result = await _blogService.BlogCommentReply(REQUEST, userid);
 
             if (result.StatusCode == 200 || result.StatusCode == 201)
             {
